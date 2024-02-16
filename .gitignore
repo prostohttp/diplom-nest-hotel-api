@@ -1,0 +1,12 @@
+# compiled output
+node_modules
+
+# OS
+.DS_Store
+
+# custom
+dist
+data
+.git
+.env
+.vscode
