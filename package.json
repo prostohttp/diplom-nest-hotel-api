@@ -1,5 +1,5 @@
 {
-  "name": "ndse25-diplom",
+  "name": "ndjs25-diplom",
   "version": "0.0.1",
   "description": "Дипломный проект представляет собой сайт-агрегатор просмотра и бронирования гостиниц. Ваша задача заключается в разработке бэкенда для сайта-агрегатора с реализацией возможности бронирования гостиниц на диапазон дат.",
   "author": "https://github.com/prostohttp",
@@ -17,7 +17,12 @@
   "dependencies": {
     "@nestjs/common": "^10.0.0",
     "@nestjs/core": "^10.0.0",
+    "@nestjs/mongoose": "^10.0.4",
     "@nestjs/platform-express": "^10.0.0",
+    "@nestjs/platform-socket.io": "^10.3.3",
+    "@nestjs/websockets": "^10.3.3",
+    "bcrypt": "^5.1.1",
+    "mongoose": "^8.1.3",
     "reflect-metadata": "^0.1.13",
     "rxjs": "^7.8.1"
   },
