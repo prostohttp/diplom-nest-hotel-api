@@ -7,7 +7,7 @@ export class HotelController {
 
   @Get("common/hotel-rooms")
   async getHotelRooms() {
-    return "Get Hotel rooms";
+    return "Get hotel rooms";
   }
 
   @Get("common/hotel-rooms/:id")
