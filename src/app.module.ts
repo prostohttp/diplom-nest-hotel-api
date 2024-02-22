@@ -13,7 +13,9 @@ import { AuthModule } from "./auth/auth.module";
     ReservationModule,
     ChatModule,
     AuthModule,
-    MongooseModule.forRoot(process.env.MONGO_URL, { connectionName: "hotel" }),
+    MongooseModule.forRoot(
+      process.env.MONGO_URL || "mongodb://localhost:27017/hotel",
+    ),
   ],
   controllers: [],
   providers: [],

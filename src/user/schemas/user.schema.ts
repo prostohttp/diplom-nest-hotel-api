@@ -3,7 +3,7 @@ import { HydratedDocument } from "mongoose";
 
 export type UserDocument = HydratedDocument<User>;
 
-enum UserRole {
+export enum UserRole {
   Client = "client",
   Admin = "admin",
   Manager = "manager",
