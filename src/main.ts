@@ -2,10 +2,10 @@ import { NestFactory } from "@nestjs/core";
 import { SwaggerModule } from "@nestjs/swagger";
 import helmet from "helmet";
 import * as session from "express-session";
+import { useContainer } from "class-validator";
 
 import { AppModule } from "./app.module";
 import { swaggerConfig } from "./config/swagger.config";
-import { useContainer } from "class-validator";
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);

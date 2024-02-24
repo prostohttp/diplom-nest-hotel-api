@@ -1,6 +1,6 @@
 import { ObjectId } from "mongoose";
-import { User } from "../schemas/user.schema";
-import { SearchUserParams } from "./search.user.params.interface";
+import { User } from "../entities/user.entity";
+import { SearchUserParams } from "./search-user-params.interface";
 
 export type ID = string | ObjectId;
 

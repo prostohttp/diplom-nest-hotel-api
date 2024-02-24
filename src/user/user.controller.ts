@@ -8,9 +8,9 @@ import {
   Query,
 } from "@nestjs/common";
 import { UserService } from "./user.service";
-import { CreateUserDto } from "./dto/create.user.dto";
-import { UserDocument } from "./schemas/user.schema";
-import { SearchUserParams } from "./interfaces/search.user.params.interface";
+import { CreateUserDto } from "./dto/create-user.dto";
+import { UserDocument } from "./entities/user.entity";
+import { SearchUserDto } from "./dto/search-user.dto";
 
 @Controller()
 export class UserController {
@@ -31,7 +31,7 @@ export class UserController {
 
   @Get("admin/users/")
   async getUserForAdmin(
-    @Query() params: SearchUserParams,
+    @Query() params: SearchUserDto,
   ): Promise<Partial<UserDocument>[]> {
     const users = await this.userService.findAll(params);
     return users.map(({ _id, email, name, contactPhone }) => ({
@@ -44,7 +44,7 @@ export class UserController {
 
   @Get("manager/users/")
   async getUserForManager(
-    @Query() params: SearchUserParams,
+    @Query() params: SearchUserDto,
   ): Promise<Partial<UserDocument>[]> {
     const users = await this.userService.findAll(params);
     return users.map(({ _id, email, name, contactPhone }) => ({

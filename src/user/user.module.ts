@@ -3,8 +3,8 @@ import { MongooseModule } from "@nestjs/mongoose";
 
 import { UserService } from "./user.service";
 import { UserController } from "./user.controller";
-import { User, UserSchema } from "./schemas/user.schema";
-import { IsUniqueEmailConstraint } from "./validators/is.unique.email.validator";
+import { User, UserSchema } from "./entities/user.entity";
+import { IsUniqueEmailConstraint } from "./validators/is-unique-email.validator";
 
 @Module({
   imports: [
