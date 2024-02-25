@@ -1,8 +1,6 @@
-import { ObjectId } from "mongoose";
 import { User } from "../entities/user.entity";
 import { SearchUserParams } from "./search-user-params.interface";
-
-export type ID = string | ObjectId;
+import { ID } from "src/types";
 
 export interface IUserService {
   create(data: Partial<User>): Promise<User>;

@@ -5,8 +5,9 @@ import * as bcrypt from "bcrypt";
 
 import { User, UserDocument } from "./entities/user.entity";
 import { CreateUserDto } from "./dto/create-user.dto";
-import { ID, IUserService } from "./interfaces/user-service.interface";
+import { IUserService } from "./interfaces/user-service.interface";
 import { SearchUserParams } from "./interfaces/search-user-params.interface";
+import { ID } from "src/types";
 
 @Injectable()
 export class UserService implements IUserService {

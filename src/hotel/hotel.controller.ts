@@ -1,42 +1,40 @@
-import { Controller, Get, Post, Put } from "@nestjs/common";
+import {
+  Body,
+  Controller,
+  Get,
+  Post,
+  Put,
+  UsePipes,
+  ValidationPipe,
+} from "@nestjs/common";
 import { HotelService } from "./hotel.service";
+import { ApiTags } from "@nestjs/swagger";
+import { HotelDto } from "./dto/hotel.dto";
+import { HotelDocument } from "./entities/hotel.entity";
 
-@Controller("")
+@ApiTags("API Модуля «Гостиницы»")
+@Controller()
 export class HotelController {
-  constructor(private readonly hostelService: HotelService) {}
+  constructor(private readonly hotelService: HotelService) {}
 
-  @Get("common/hotel-rooms")
-  async getHotelRooms() {
-    return "Get hotel rooms";
-  }
-
-  @Get("common/hotel-rooms/:id")
-  async getHotelRoom() {
-    return "Get Hotel room";
-  }
-
+  @UsePipes(ValidationPipe)
   @Post("admin/hotels/")
-  async addHotels() {
-    return "Admin Add hotel";
+  async addHotels(@Body() data: HotelDto): Promise<Partial<HotelDocument>> {
+    const hotel = await this.hotelService.create(data);
+    return {
+      id: hotel._id,
+      title: hotel.title,
+      description: hotel.description,
+    };
   }
 
   @Get("admin/hotels/")
   async getHotels() {
-    return "Admin Get hotel";
+    return "Admin Get hotels";
   }
 
   @Put("admin/hotels/:id")
   async changeHotel() {
     return "Change Hotel";
-  }
-
-  @Post("admin/hotel-rooms/")
-  async addHotelRoom() {
-    return "Admin add hotel room";
-  }
-
-  @Put("admin/hotel-rooms/:id")
-  async changeHotelRoom() {
-    return "Change Hotel room";
   }
 }
