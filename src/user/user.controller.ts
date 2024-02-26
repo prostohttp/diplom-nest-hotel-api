@@ -11,13 +11,17 @@ import { UserService } from "./user.service";
 import { CreateUserDto } from "./dto/create-user.dto";
 import { UserDocument } from "./entities/user.entity";
 import { SearchUserDto } from "./dto/search-user.dto";
-import { ApiTags } from "@nestjs/swagger";
+import { ApiOperation, ApiTags } from "@nestjs/swagger";
 
 @ApiTags("API Модуля «Управление пользователями»")
 @Controller()
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
+  @ApiOperation({
+    summary:
+      "Позволяет пользователю с ролью admin создать пользователя в системе.",
+  })
   @UsePipes(ValidationPipe)
   @Post("admin/users/")
   async create(@Body() data: CreateUserDto): Promise<Partial<UserDocument>> {
@@ -31,6 +35,9 @@ export class UserController {
     };
   }
 
+  @ApiOperation({
+    summary: "Получение списка пользователей юзером с ролью admin.",
+  })
   @Get("admin/users/")
   async getUserForAdmin(
     @Query() params: SearchUserDto,
@@ -44,6 +51,9 @@ export class UserController {
     })) as Partial<UserDocument>[];
   }
 
+  @ApiOperation({
+    summary: "Получение списка пользователей юзером с ролью manager.",
+  })
   @Get("manager/users/")
   async getUserForManager(
     @Query() params: SearchUserDto,

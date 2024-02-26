@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable } from "@nestjs/common";
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from "@nestjs/common";
 import { Model } from "mongoose";
 import { InjectModel } from "@nestjs/mongoose";
 import { ID } from "src/types";
@@ -13,17 +17,15 @@ export class HotelService implements IHotelService {
   constructor(@InjectModel(Hotel.name) private hotelModel: Model<Hotel>) {}
 
   create(data: IHotel): Promise<HotelDocument> {
-    try {
-      const hotel = new this.hotelModel({
-        ...data,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      });
-      if (hotel) {
-        return hotel.save();
-      }
-    } catch (error) {
-      throw new BadRequestException(error.message);
+    const hotel = new this.hotelModel({
+      ...data,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
+    if (hotel) {
+      return hotel.save();
+    } else {
+      throw new BadRequestException();
     }
   }
 
@@ -32,12 +34,27 @@ export class HotelService implements IHotelService {
   }
 
   findById(id: ID): Promise<HotelDocument> {
-    throw new Error("Method not implemented.");
+    return this.hotelModel.findOne({ _id: id });
   }
+
   search(params: SearchHotelParams): Promise<HotelDocument[]> {
-    throw new Error("Method not implemented.");
+    const { title = "", limit, offset } = params;
+    return this.hotelModel
+      .find({
+        title: { $regex: title, $options: "i" },
+      })
+      .skip(offset)
+      .limit(limit);
   }
+
   update(id: ID, data: UpdateHotelParams): Promise<HotelDocument> {
-    throw new Error("Method not implemented.");
+    const hotel = this.findById(id);
+    if (hotel) {
+      return this.hotelModel.findOneAndUpdate({ _id: id }, data, {
+        new: true,
+      });
+    } else {
+      throw new NotFoundException();
+    }
   }
 }
