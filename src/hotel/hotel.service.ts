@@ -50,9 +50,13 @@ export class HotelService implements IHotelService {
   update(id: ID, data: UpdateHotelParams): Promise<HotelDocument> {
     const hotel = this.findById(id);
     if (hotel) {
-      return this.hotelModel.findOneAndUpdate({ _id: id }, data, {
-        new: true,
-      });
+      return this.hotelModel.findOneAndUpdate(
+        { _id: id },
+        { ...data, updatedAt: new Date() },
+        {
+          new: true,
+        },
+      );
     } else {
       throw new NotFoundException();
     }

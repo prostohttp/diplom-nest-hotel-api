@@ -9,6 +9,7 @@
     "build": "nest build",
     "format": "prettier --write \"src/**/*.ts\"",
     "start": "nest start",
+    "start:swc": "nest start -b swc --type-check",
     "start:dev": "nest start --type-check --watch",
     "start:dev:swc": "nest start -b swc --type-check -w",
     "start:debug": "nest start --debug --watch",

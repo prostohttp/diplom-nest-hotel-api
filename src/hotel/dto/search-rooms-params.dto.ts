@@ -8,9 +8,9 @@ export class SearchRoomsParamsDto implements SearchRoomsParams {
   @ApiProperty({ default: 1 })
   offset: number;
 
-  @ApiProperty({ default: "Hotel 1" })
+  @ApiProperty({ default: "Hotel 1", required: true })
   hotel: string;
 
-  @ApiProperty({ default: true })
+  @ApiProperty({ default: true, required: false })
   isEnabled?: boolean;
 }

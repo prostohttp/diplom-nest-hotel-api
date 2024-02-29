@@ -5,8 +5,12 @@ export type HotelRoomDocument = HydratedDocument<HotelRoom>;
 
 @Schema()
 export class HotelRoom {
-  @Prop({ type: MongooseSchema.Types.ObjectId, ref: "Hotel", required: true })
-  hotel: MongooseSchema.Types.ObjectId;
+  @Prop({
+    type: MongooseSchema.Types.ObjectId,
+    ref: "Hotel",
+    required: true,
+  })
+  hotel: MongooseSchema.Types.ObjectId | string;
 
   @Prop({ required: false, unique: false })
   description: string;
