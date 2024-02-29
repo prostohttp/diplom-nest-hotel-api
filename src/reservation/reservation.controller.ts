@@ -1,13 +1,27 @@
-import { Controller, Delete, Get, Post } from "@nestjs/common";
+import {
+  Controller,
+  Delete,
+  Get,
+  Body,
+  Post,
+  BadRequestException,
+} from "@nestjs/common";
 import { ReservationService } from "./reservation.service";
+import { ReservationDto } from "./dto/reservation.dto";
 
 @Controller("")
 export class ReservationController {
   constructor(private readonly reservationService: ReservationService) {}
 
   @Post("client/reservations")
-  async addClientReservations() {
-    return "Add Client reservation";
+  async addClientReservations(
+    @Body() reservationDto: ReservationDto,
+  ): Promise<any> {
+    const { hotelRoom, startDate, endDate } = reservationDto;
+    try {
+    } catch (error) {
+      throw new BadRequestException(error.message);
+    }
   }
 
   @Get("client/reservations")
