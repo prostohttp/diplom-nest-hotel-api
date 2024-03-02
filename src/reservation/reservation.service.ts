@@ -2,7 +2,7 @@ import { Injectable, NotFoundException } from "@nestjs/common";
 import { Model } from "mongoose";
 import { InjectModel } from "@nestjs/mongoose";
 import { IReservation } from "./interfaces/reservation.interface";
-import { ID } from "src/types";
+import { ID } from "src/types/id";
 import { Reservation } from "./entities/reservation.entity";
 import { User } from "src/user/entities/user.entity";
 import { ReservationDto } from "./interfaces/reservation-dto.interface";

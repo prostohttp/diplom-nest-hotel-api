@@ -2,6 +2,7 @@ import { NestFactory } from "@nestjs/core";
 import { SwaggerModule } from "@nestjs/swagger";
 import helmet from "helmet";
 import * as session from "express-session";
+import * as cookieParser from "cookie-parser";
 import { useContainer } from "class-validator";
 
 import { AppModule } from "./app.module";
@@ -12,6 +13,7 @@ async function bootstrap() {
   useContainer(app.select(AppModule), { fallbackOnErrors: true });
   app.setGlobalPrefix("api");
   app.use(helmet());
+  app.use(cookieParser());
   app.use(
     session({
       secret: process.env.SESSION_SECRET || "super_secret",

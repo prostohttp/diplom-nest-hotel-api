@@ -7,7 +7,7 @@ import { User, UserDocument } from "./entities/user.entity";
 import { CreateUserDto } from "./dto/create-user.dto";
 import { IUserService } from "./interfaces/user-service.interface";
 import { SearchUserParams } from "./interfaces/search-user-params.interface";
-import { ID } from "src/types";
+import { ID } from "src/types/id";
 
 @Injectable()
 export class UserService implements IUserService {

@@ -15,7 +15,7 @@ import { Response } from "express";
 import { HotelService } from "./hotel.service";
 import { ApiOperation, ApiParam, ApiTags } from "@nestjs/swagger";
 import { HotelDocument } from "./entities/hotel.entity";
-import { ID } from "src/types";
+import { ID } from "src/types/id";
 import { UpdateHotelParamsDto } from "./dto/update-hotel-params.dto";
 import { AddHotelParamsDto } from "./dto/add-hotel-params.dto";
 import { SearchHotelParamsDto } from "./dto/search-hotel-params.dto";

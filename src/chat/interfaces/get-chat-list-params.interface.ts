@@ -1,4 +1,4 @@
-import { ID } from "src/types";
+import { ID } from "src/types/id";
 
 export interface GetChatListParams {
   user: ID | null;

@@ -7,8 +7,9 @@ import {
   MinLength,
 } from "class-validator";
 import { IsUniqueEmail } from "../validators/is-unique-email.validator";
-import { UserRole } from "../entities/user.entity";
+
 import { ApiProperty } from "@nestjs/swagger";
+import { UserRoles } from "src/types/user-roles";
 
 export class CreateUserDto {
   @ApiProperty({ default: "test@site.ru" })
@@ -32,9 +33,9 @@ export class CreateUserDto {
   contactPhone: string;
 
   @ApiProperty({ default: "client" })
-  @IsEnum(UserRole, {
+  @IsEnum(UserRoles, {
     message: "Поле role может быть client | admin | manager",
   })
   @IsNotEmpty({ message: "Поле role не должно быть пустым" })
-  role: UserRole;
+  role: UserRoles;
 }

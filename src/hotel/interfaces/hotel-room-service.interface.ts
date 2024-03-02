@@ -1,4 +1,4 @@
-import { ID } from "src/types";
+import { ID } from "src/types/id";
 import { HotelRoom } from "../entities/hotel-room.entity";
 import { SearchRoomsParams } from "./search-rooms-params.interface";
 

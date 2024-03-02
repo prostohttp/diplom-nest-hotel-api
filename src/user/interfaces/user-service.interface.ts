@@ -1,6 +1,6 @@
 import { User } from "../entities/user.entity";
 import { SearchUserParams } from "./search-user-params.interface";
-import { ID } from "src/types";
+import { ID } from "src/types/id";
 
 export interface IUserService {
   create(data: Partial<User>): Promise<User>;

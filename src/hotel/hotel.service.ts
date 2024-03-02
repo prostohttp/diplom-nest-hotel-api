@@ -5,7 +5,7 @@ import {
 } from "@nestjs/common";
 import { Model } from "mongoose";
 import { InjectModel } from "@nestjs/mongoose";
-import { ID } from "src/types";
+import { ID } from "src/types/id";
 import { IHotelService } from "./interfaces/hotel-service.interface";
 import { Hotel, HotelDocument } from "./entities/hotel.entity";
 import { SearchHotelParams } from "./interfaces/search-hotel-params.interface";
