@@ -1,9 +1,4 @@
-import {
-  BadGatewayException,
-  HttpStatus,
-  Injectable,
-  NotFoundException,
-} from "@nestjs/common";
+import { HttpStatus, Injectable, UnauthorizedException } from "@nestjs/common";
 import * as bcrypt from "bcrypt";
 import { Request, Response } from "express";
 import { UserService } from "src/user/user.service";
@@ -18,11 +13,11 @@ export class AuthService {
   ): Promise<{ email: string; name: string; contactPhone: string }> {
     const user = await this.userService.findByEmail(email);
     if (!user) {
-      throw new NotFoundException("Такого пользователя не существует");
+      throw new UnauthorizedException("Такого пользователя не существует");
     }
     const passwordHash = await bcrypt.compare(password, user.passwordHash);
     if (!passwordHash) {
-      throw new BadGatewayException("Имя или пароль не верны");
+      throw new UnauthorizedException("Имя или пароль не верны");
     }
     if (user && passwordHash) {
       return {
@@ -41,8 +36,7 @@ export class AuthService {
   async logout(request: Request, response: Response): Promise<any> {
     request.session.destroy(() => {
       response.status(HttpStatus.OK).json({
-        message: "Logout successful",
-        statusCode: HttpStatus.OK,
+        message: "Вы успешно вышли",
       });
     });
   }
