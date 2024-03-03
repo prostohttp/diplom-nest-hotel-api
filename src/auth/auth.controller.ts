@@ -7,7 +7,9 @@ import { UserRoles } from "src/types/user-roles";
 import { SignUpDto } from "./dto/user-sign-up.dto";
 import { IsAuthenticatedGuard } from "src/guards/is-authenticated.guard";
 import { IsNotAuthenticatedGuard } from "src/guards/is-not-authenticated.guard";
+import { ApiTags, ApiOperation, ApiBody } from "@nestjs/swagger";
 
+@ApiTags("API Модуля «Аутентификация и авторизация»")
 @Controller()
 export class AuthController {
   constructor(
@@ -15,6 +17,22 @@ export class AuthController {
     private readonly userService: UserService,
   ) {}
 
+  @ApiOperation({
+    summary: "Вход.",
+  })
+  @ApiBody({
+    schema: {
+      type: "object",
+      required: ["email", "password"],
+      properties: {
+        email: {
+          type: "string",
+          default: "admin@site.ru",
+        },
+        password: { type: "string", default: "12345" },
+      },
+    },
+  })
   @UseGuards(IsNotAuthenticatedGuard, LocalAuthGuard)
   @Post("auth/login")
   async login(@Req() req: Request): Promise<any> {
@@ -26,12 +44,18 @@ export class AuthController {
     };
   }
 
+  @ApiOperation({
+    summary: "Выход.",
+  })
   @UseGuards(IsAuthenticatedGuard)
   @Post("auth/logout")
   logout(@Req() request: Request, @Res() response: Response): Promise<any> {
     return this.authService.logout(request, response);
   }
 
+  @ApiOperation({
+    summary: "Регистрация.",
+  })
   @Post("client/register")
   async register(@Body() data: SignUpDto): Promise<any> {
     const user = await this.userService.create({
