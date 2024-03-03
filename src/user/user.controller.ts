@@ -6,18 +6,23 @@ import {
   ValidationPipe,
   UsePipes,
   Query,
+  UseGuards,
 } from "@nestjs/common";
 import { UserService } from "./user.service";
 import { CreateUserDto } from "./dto/create-user.dto";
 import { UserDocument } from "./entities/user.entity";
 import { SearchUserDto } from "./dto/search-user.dto";
 import { ApiOperation, ApiTags } from "@nestjs/swagger";
+import { IsAdmin } from "src/guards/is-admin.guard";
+import { IsAuthenticatedGuard } from "src/guards/is-authenticated.guard";
+import { IsManager } from "src/guards/is-manager.guard";
 
 @ApiTags("API Модуля «Управление пользователями»")
 @Controller()
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
+  @UseGuards(IsAuthenticatedGuard, IsAdmin)
   @ApiOperation({
     summary:
       "Позволяет пользователю с ролью admin создать пользователя в системе.",
@@ -35,6 +40,7 @@ export class UserController {
     };
   }
 
+  @UseGuards(IsAuthenticatedGuard, IsAdmin)
   @ApiOperation({
     summary: "Получение списка пользователей юзером с ролью admin.",
   })
@@ -51,6 +57,7 @@ export class UserController {
     })) as Partial<UserDocument>[];
   }
 
+  @UseGuards(IsAuthenticatedGuard, IsManager)
   @ApiOperation({
     summary: "Получение списка пользователей юзером с ролью manager.",
   })
