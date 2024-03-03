@@ -1,9 +1,11 @@
 import {
   BadGatewayException,
+  HttpStatus,
   Injectable,
   NotFoundException,
 } from "@nestjs/common";
 import * as bcrypt from "bcrypt";
+import { Request, Response } from "express";
 import { UserService } from "src/user/user.service";
 
 @Injectable()
@@ -30,5 +32,18 @@ export class AuthService {
       };
     }
     return null;
+  }
+
+  async login(req: Request): Promise<any> {
+    return req.user;
+  }
+
+  async logout(request: Request, response: Response): Promise<any> {
+    request.session.destroy(() => {
+      response.status(HttpStatus.OK).json({
+        message: "Logout successful",
+        statusCode: HttpStatus.OK,
+      });
+    });
   }
 }

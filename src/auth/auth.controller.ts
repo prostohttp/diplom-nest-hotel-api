@@ -1,46 +1,42 @@
-import {
-  Body,
-  Controller,
-  Post,
-  Req,
-  Session,
-  UseGuards,
-} from "@nestjs/common";
+import { Body, Controller, Post, Req, Res, UseGuards } from "@nestjs/common";
 import { AuthService } from "./auth.service";
-import { UserRequestParamsDto } from "./dto/user-request-params.dto";
 import { LocalAuthGuard } from "src/guards/auth.guard";
-import { Request } from "express";
-import { IsAuthenticatedGuard } from "src/guards/authenticated.guard";
+import { Request, Response } from "express";
+import { UserService } from "src/user/user.service";
+import { UserRoles } from "src/types/user-roles";
+import { SignUpDto } from "./dto/user-sign-up.dto";
+import { IsAuthenticatedGuard } from "src/guards/is-authenticated.guard";
+import { IsNotAuthenticatedGuard } from "src/guards/is-not-authenticated.guard";
 
 @Controller()
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    private readonly userService: UserService,
+  ) {}
 
-  @UseGuards(LocalAuthGuard)
+  @UseGuards(IsNotAuthenticatedGuard, LocalAuthGuard)
   @Post("auth/login")
-  async login(
-    @Body() params: UserRequestParamsDto,
-    @Req() request: Request,
-    @Session() session: any,
-  ) {
-    const user = await this.authService.validateUser(
-      params.email,
-      params.password,
-    );
-    if (user) {
-      session.userId = user.email;
-      request.cookies["userId"] = user.email;
-      return this.authService.validateUser(params.email, params.password);
-    }
+  login(@Req() req: Request): Promise<any> {
+    return this.authService.login(req);
   }
+
   @UseGuards(IsAuthenticatedGuard)
   @Post("auth/logout")
-  async logout() {
-    return "Logout";
+  logout(@Req() request: Request, @Res() response: Response): Promise<any> {
+    return this.authService.logout(request, response);
   }
 
   @Post("client/register")
-  async register() {
-    return "Register";
+  async register(@Body() data: SignUpDto): Promise<any> {
+    const user = await this.userService.create({
+      ...data,
+      role: UserRoles.Client,
+    });
+    return {
+      id: user._id,
+      email: user.email,
+      name: user.name,
+    };
   }
 }

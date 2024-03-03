@@ -4,16 +4,17 @@ import helmet from "helmet";
 import * as session from "express-session";
 import * as cookieParser from "cookie-parser";
 import { useContainer } from "class-validator";
+import * as passport from "passport";
 
 import { AppModule } from "./app.module";
 import { swaggerConfig } from "./config/swagger.config";
+import { ValidationPipe } from "@nestjs/common";
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  useContainer(app.select(AppModule), { fallbackOnErrors: true });
   app.setGlobalPrefix("api");
-  app.use(helmet());
   app.use(cookieParser());
+  app.use(helmet());
   app.use(
     session({
       secret: process.env.SESSION_SECRET || "super_secret",
@@ -21,7 +22,10 @@ async function bootstrap() {
       saveUninitialized: false,
     }),
   );
-
+  app.use(passport.session());
+  app.use(passport.initialize());
+  app.useGlobalPipes(new ValidationPipe());
+  useContainer(app.select(AppModule), { fallbackOnErrors: true });
   const document = SwaggerModule.createDocument(app, swaggerConfig());
   SwaggerModule.setup("api", app, document);
 
