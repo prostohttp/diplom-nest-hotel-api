@@ -10,7 +10,12 @@ export class AuthService {
   async validateUser(
     email: string,
     password: string,
-  ): Promise<{ email: string; name: string; contactPhone: string }> {
+  ): Promise<{
+    email: string;
+    name: string;
+    contactPhone: string;
+    role: string;
+  }> {
     const user = await this.userService.findByEmail(email);
     if (!user) {
       throw new UnauthorizedException("Такого пользователя не существует");
@@ -24,6 +29,7 @@ export class AuthService {
         email: user.email,
         name: user.name,
         contactPhone: user.contactPhone,
+        role: user.role,
       };
     }
     return null;

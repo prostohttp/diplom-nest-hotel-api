@@ -8,6 +8,7 @@ import {
   Put,
   Query,
   Res,
+  UseGuards,
   UsePipes,
   ValidationPipe,
 } from "@nestjs/common";
@@ -19,12 +20,15 @@ import { ID } from "src/types/id";
 import { UpdateHotelParamsDto } from "./dto/update-hotel-params.dto";
 import { AddHotelParamsDto } from "./dto/add-hotel-params.dto";
 import { SearchHotelParamsDto } from "./dto/search-hotel-params.dto";
+import { IsAuthenticatedGuard } from "src/guards/is-authenticated.guard";
+import { IsAdmin } from "src/guards/is-admin.guard";
 
 @ApiTags("API Модуля «Гостиницы»")
 @Controller()
 export class HotelController {
   constructor(private readonly hotelService: HotelService) {}
 
+  @UseGuards(IsAuthenticatedGuard, IsAdmin)
   @ApiOperation({
     summary: "Добавление гостиницы администратором.",
   })
@@ -45,6 +49,7 @@ export class HotelController {
     }
   }
 
+  @UseGuards(IsAuthenticatedGuard, IsAdmin)
   @ApiOperation({
     summary: "Получение списка гостиниц администратором.",
   })
@@ -55,6 +60,7 @@ export class HotelController {
     return this.hotelService.search(params);
   }
 
+  @UseGuards(IsAuthenticatedGuard, IsAdmin)
   @ApiOperation({
     summary: "Изменение описания гостиницы администратором.",
   })

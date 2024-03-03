@@ -17,8 +17,13 @@ export class AuthController {
 
   @UseGuards(IsNotAuthenticatedGuard, LocalAuthGuard)
   @Post("auth/login")
-  login(@Req() req: Request): Promise<any> {
-    return this.authService.login(req);
+  async login(@Req() req: Request): Promise<any> {
+    const user = await this.authService.login(req);
+    return {
+      email: user.email,
+      name: user.name,
+      contactPhone: user.contactPhone,
+    };
   }
 
   @UseGuards(IsAuthenticatedGuard)

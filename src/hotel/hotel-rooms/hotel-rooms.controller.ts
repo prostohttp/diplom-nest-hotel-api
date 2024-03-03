@@ -12,6 +12,7 @@ import {
   Put,
   Query,
   UploadedFiles,
+  UseGuards,
   UseInterceptors,
 } from "@nestjs/common";
 import { promises as fs } from "fs";
@@ -35,6 +36,8 @@ import { storageConfig } from "./config/disk-storage";
 import { HotelRoomDocument } from "../entities/hotel-room.entity";
 import { UpdateHotelRoomParamsDto } from "../dto/update-hotel-room-params.dto";
 import { SearchRoomsParams } from "../interfaces/search-rooms-params.interface";
+import { IsAdmin } from "src/guards/is-admin.guard";
+import { IsAuthenticatedGuard } from "src/guards/is-authenticated.guard";
 
 @ApiTags("API Модуля «Гостиницы»")
 @Controller()
@@ -44,6 +47,7 @@ export class HotelRoomsController {
     private readonly hotelService: HotelService,
   ) {}
 
+  @UseGuards(IsAuthenticatedGuard, IsAdmin)
   @ApiOperation({
     summary: "Добавление номера гостиницы администратором.",
   })
@@ -184,6 +188,7 @@ export class HotelRoomsController {
     }
   }
 
+  @UseGuards(IsAuthenticatedGuard, IsAdmin)
   @ApiOperation({
     summary: "Изменение описания номера гостиницы администратором.",
   })
