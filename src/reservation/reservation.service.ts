@@ -27,7 +27,13 @@ export class ReservationService implements IReservation {
   removeReservation(id: ID): Promise<void> {
     throw new Error("Method not implemented.");
   }
+
   getReservations(filter: ReservationSearchOptions): Promise<Reservation[]> {
-    throw new Error("Method not implemented.");
+    const { userId, dateStart, dateEnd } = filter;
+    return this.ReservationModel.find({
+      userId,
+      dateStart: { $gte: dateStart },
+      dateEnd: { $lte: dateEnd },
+    });
   }
 }
