@@ -8,6 +8,8 @@ import {
   Req,
   UseGuards,
   Query,
+  Param,
+  ForbiddenException,
 } from "@nestjs/common";
 import { ReservationService } from "./reservation.service";
 import { ReservationDto } from "./dto/reservation.dto";
@@ -23,6 +25,7 @@ import { Model } from "mongoose";
 import { User } from "src/user/entities/user.entity";
 import { isValidIdHandler } from "src/utils";
 import { ID } from "src/types/id";
+import { IsManager } from "src/guards/is-manager.guard";
 
 @ApiTags("API Модуля «Бронирование»")
 @Controller()
@@ -57,8 +60,8 @@ export class ReservationController {
     }
     const hotel = await this.HotelModel.findById({ _id: room.hotel });
     const hotelId = room.hotel as string;
-    const userId = user._id as unknown as string;
-    const roomId = room._id as unknown as string;
+    const userId = user._id.toString();
+    const roomId = room._id.toString();
     const data = {
       userId,
       hotelId,
@@ -106,50 +109,86 @@ export class ReservationController {
       dateEnd: new Date(dateEnd),
     });
 
-    const reservationPromises = reservations.map(async (reservation) => {
-      const [room, hotel] = await Promise.all([
-        this.HotelRoomModel.findById(reservation.roomId),
-        this.HotelModel.findById(reservation.hotelId),
-      ]);
-
-      return {
-        startDate: reservation.dateStart,
-        endDate: reservation.dateEnd,
-        hotelRoom: {
-          description: room?.description,
-          images: room?.images,
-        },
-        hotel: {
-          title: hotel?.title,
-          description: hotel?.description,
-        },
-      };
-    });
-
-    return Promise.all(reservationPromises);
+    return reservationsHandler(reservations, this);
   }
 
+  @UseGuards(IsAuthenticatedGuard, IsClient)
   @ApiOperation({
     summary: "Отмена бронирования клиентом.",
   })
   @Delete("client/reservations/:id")
-  async removeClientReservations() {
-    return "Remove Client reservation";
+  async removeClientReservations(
+    @Param("id") id: string,
+    @Req() request: Request,
+  ) {
+    const isValidReservationId = isValidIdHandler(id);
+    const client = request.user as User;
+    const user = await this.UserModel.findOne({ email: client.email });
+    const userId = user._id.toString();
+    const roomReservation =
+      await this.ReservationModel.findById(isValidReservationId);
+    if (!roomReservation) {
+      throw new BadRequestException("Бронь не найдена");
+    }
+    const roomReservationUserId = roomReservation.userId.toString();
+    if (userId !== roomReservationUserId) {
+      throw new ForbiddenException(
+        "Нельзя отменить бронь другого пользователя",
+      );
+    }
+
+    this.reservationService.removeReservation(isValidReservationId);
   }
 
+  @UseGuards(IsAuthenticatedGuard, IsManager)
   @ApiOperation({
     summary: "Список броней конкретного пользователя.",
   })
   @Get("manager/reservations/:userId")
-  async getManagerReservationsForClient() {
-    return "Get manager reservation for client";
+  async getManagerReservationsForClient(
+    @Param("userId") userId: string,
+  ): Promise<any[]> {
+    const reservations = await this.ReservationModel.find({ userId });
+    return reservationsHandler(reservations, this);
   }
 
+  @UseGuards(IsAuthenticatedGuard, IsManager)
   @ApiOperation({
     summary: "Отмена бронирования менеджером.",
   })
   @Delete("manager/reservations/:id")
-  async removeManagerReservationsForClient() {
-    return "Remove manager reservation for client";
+  async removeManagerReservationsForClient(
+    @Param("id") id: string,
+  ): Promise<void> {
+    const reservation = await this.ReservationModel.findById(id);
+    if (!reservation) {
+      throw new BadRequestException("Бронь не найдена");
+    }
+    this.reservationService.removeReservation(id);
   }
+}
+
+function reservationsHandler(
+  reservations: Reservation[],
+  context,
+): Promise<any[]> {
+  const reservationPromises = reservations.map(async (reservation) => {
+    const [room, hotel] = await Promise.all([
+      context.HotelRoomModel.findById(reservation.roomId),
+      context.HotelModel.findById(reservation.hotelId),
+    ]);
+    return {
+      startDate: reservation.dateStart,
+      endDate: reservation.dateEnd,
+      hotelRoom: {
+        description: room?.description,
+        images: room?.images,
+      },
+      hotel: {
+        title: hotel?.title,
+        description: hotel?.description,
+      },
+    };
+  });
+  return Promise.all(reservationPromises);
 }

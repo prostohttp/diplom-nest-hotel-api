@@ -24,8 +24,8 @@ export class ReservationService implements IReservation {
     });
   }
 
-  removeReservation(id: ID): Promise<void> {
-    throw new Error("Method not implemented.");
+  async removeReservation(id: ID): Promise<void> {
+    await this.ReservationModel.deleteOne({ _id: id });
   }
 
   getReservations(filter: ReservationSearchOptions): Promise<Reservation[]> {
