@@ -11,6 +11,7 @@ import {
   Post,
   Put,
   Query,
+  Req,
   UploadedFiles,
   UseGuards,
   UseInterceptors,
@@ -35,9 +36,16 @@ import { HotelService } from "../hotel.service";
 import { storageConfig } from "./config/disk-storage";
 import { HotelRoomDocument } from "../entities/hotel-room.entity";
 import { UpdateHotelRoomParamsDto } from "../dto/update-hotel-room-params.dto";
-import { SearchRoomsParams } from "../interfaces/search-rooms-params.interface";
 import { IsAdmin } from "src/guards/is-admin.guard";
 import { IsAuthenticatedGuard } from "src/guards/is-authenticated.guard";
+import { AddRoomResponseDto } from "../dto/add-room-response.dto";
+import { SearchRoomResponseDto } from "../dto/search-room-response.dto";
+import { isValidIdHandler } from "src/utils";
+import { SearchRoomsParamsDto } from "../dto/search-rooms-params.dto";
+import { Request } from "express";
+import { UserRoles } from "src/types/user-roles";
+import { User } from "src/user/entities/user.entity";
+import { RoomInfoResponseDto } from "../dto/room-info-response.dto";
 
 @ApiTags("API Модуля «Гостиницы»")
 @Controller()
@@ -47,9 +55,17 @@ export class HotelRoomsController {
     private readonly hotelService: HotelService,
   ) {}
 
-  @UseGuards(IsAuthenticatedGuard, IsAdmin)
   @ApiOperation({
-    summary: "Добавление номера гостиницы администратором.",
+    summary: "Добавление номера гостиницы.",
+    description: "Добавление номера гостиницы администратором.",
+  })
+  @ApiResponse({
+    status: 401,
+    description: "если пользователь не аутентифицирован",
+  })
+  @ApiResponse({
+    status: 403,
+    description: "если роль пользователя не подходит",
   })
   @ApiConsumes("multipart/form-data")
   @ApiBody({
@@ -69,6 +85,7 @@ export class HotelRoomsController {
       },
     },
   })
+  @UseGuards(IsAuthenticatedGuard, IsAdmin)
   @UseInterceptors(
     FilesInterceptor("images", 10, {
       storage: storageConfig,
@@ -84,7 +101,7 @@ export class HotelRoomsController {
       }),
     )
     multerImagesArray: Express.Multer.File[],
-  ): Promise<any> {
+  ): Promise<AddRoomResponseDto> {
     try {
       const hotel = await this.hotelService.findById(data.hotelId);
       const images = multerImagesArray.map((file) => file.path);
@@ -99,12 +116,12 @@ export class HotelRoomsController {
       });
 
       return {
-        id: hotelRoom._id,
+        id: hotelRoom._id.toString(),
         description: hotelRoom.description,
         images: images,
         isEnabled: hotelRoom.isEnabled,
         hotel: {
-          id: hotel._id,
+          id: hotel._id.toString(),
           title: hotel.title,
           description: hotel.description,
         },
@@ -125,6 +142,7 @@ export class HotelRoomsController {
 
   @ApiOperation({
     summary: "Поиск номеров",
+    description: "Основной API для поиска номеров.",
   })
   @ApiQuery({ name: "limit", required: false, type: Number })
   @ApiQuery({ name: "offset", required: false, type: Number })
@@ -132,29 +150,32 @@ export class HotelRoomsController {
   @ApiQuery({ name: "isEnabled", required: false, type: Boolean })
   @ApiBadRequestResponse({ description: "Неверные параметры запроса" })
   @ApiNotFoundResponse({ description: "Гостиница не найдена" })
-  @ApiResponse({ status: 200, description: "Успешный запрос", type: [Object] })
   @Get("common/hotel-rooms")
-  async getHotelRooms(@Query() params: SearchRoomsParams): Promise<Array<any>> {
+  async getHotelRooms(
+    @Query() params: SearchRoomsParamsDto,
+    @Req() request: Request,
+  ): Promise<SearchRoomResponseDto[]> {
     const { limit, offset, hotel, isEnabled = undefined } = params;
-
+    const isValidHotelId = isValidIdHandler(hotel);
+    const user = request.user as User;
     try {
-      const searchedHotel = await this.hotelService.findById(hotel);
+      const searchedHotel = await this.hotelService.findById(isValidHotelId);
       if (!searchedHotel) {
         throw new NotFoundException("Гостиница не найдена");
       }
       const searchedRooms = await this.hotelRoomsService.search({
         limit,
         offset,
-        hotel,
-        isEnabled,
+        hotel: isValidHotelId,
+        isEnabled: !user || user.role === UserRoles.Client ? true : isEnabled,
       });
       return searchedRooms.map((room) => ({
-        id: room._id,
+        id: room._id.toString(),
         description: room.description,
         images: room.images,
         isEnabled: room.isEnabled,
         hotel: {
-          id: searchedHotel._id,
+          id: searchedHotel._id.toString(),
           title: searchedHotel.title,
         },
       }));
@@ -165,21 +186,30 @@ export class HotelRoomsController {
 
   @ApiOperation({
     summary: "Информация о конкретном номере.",
+    description: "Получение подробной информации о номере.",
   })
   @ApiParam({
     name: "id",
-    description: "Идентификатор номера",
     type: String,
   })
   @ApiNotFoundResponse({ description: "Номер не найден" })
   @Get("common/hotel-rooms/:id")
-  async getHotelRoom(
-    @Param("id") id: string,
-  ): Promise<Partial<HotelRoomDocument>> {
+  async getHotelRoom(@Param("id") id: string): Promise<RoomInfoResponseDto> {
+    const isValidId = isValidIdHandler(id);
     try {
-      const hotelRoom = await this.hotelRoomsService.findById(id);
+      const hotelRoom = await this.hotelRoomsService.findById(isValidId);
       if (hotelRoom) {
-        return hotelRoom;
+        const hotel = await this.hotelService.findById(hotelRoom.hotel);
+        return {
+          id: hotelRoom._id.toString(),
+          description: hotelRoom.description,
+          images: hotelRoom.images,
+          hotel: {
+            id: hotelRoom.hotel.toString(),
+            title: hotel.title,
+            description: hotel.description,
+          },
+        };
       } else {
         throw new NotFoundException("Номер не найден");
       }
@@ -188,9 +218,17 @@ export class HotelRoomsController {
     }
   }
 
-  @UseGuards(IsAuthenticatedGuard, IsAdmin)
   @ApiOperation({
-    summary: "Изменение описания номера гостиницы администратором.",
+    summary: "Изменение описания номера.",
+    description: "Изменение описания номера гостиницы администратором.",
+  })
+  @ApiResponse({
+    status: 401,
+    description: "если пользователь не аутентифицирован",
+  })
+  @ApiResponse({
+    status: 403,
+    description: "если роль пользователя не подходит",
   })
   @ApiConsumes("multipart/form-data")
   @ApiBody({
@@ -217,6 +255,7 @@ export class HotelRoomsController {
       },
     },
   })
+  @UseGuards(IsAuthenticatedGuard, IsAdmin)
   @UseInterceptors(
     FilesInterceptor("images", 10, {
       storage: storageConfig,
@@ -233,7 +272,7 @@ export class HotelRoomsController {
       }),
     )
     multerImagesArray: Express.Multer.File[],
-  ): Promise<any> {
+  ): Promise<AddRoomResponseDto> {
     try {
       const hotel = await this.hotelService.findById(data.hotelId);
       const hotelRoom = await this.hotelRoomsService.findById(id);
@@ -253,12 +292,12 @@ export class HotelRoomsController {
       });
 
       return {
-        id: updatedHotelRoom._id,
+        id: updatedHotelRoom._id.toString(),
         description: updatedHotelRoom.description,
         images: updatedHotelRoom.images,
         isEnabled: updatedHotelRoom.isEnabled,
         hotel: {
-          id: hotel._id,
+          id: hotel._id.toString(),
           title: hotel.title,
           description: hotel.description,
         },

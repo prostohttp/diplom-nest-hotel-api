@@ -1,14 +1,13 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { SearchRoomsParams } from "../interfaces/search-rooms-params.interface";
 
-export class SearchRoomsParamsDto implements SearchRoomsParams {
-  @ApiProperty({ default: 1 })
+export class SearchRoomsParamsDto {
+  @ApiProperty({ default: 100 })
   limit: number;
 
-  @ApiProperty({ default: 1 })
+  @ApiProperty({ default: 0 })
   offset: number;
 
-  @ApiProperty({ default: "Hotel 1", required: true })
+  @ApiProperty({ default: "Hotel Id", required: true })
   hotel: string;
 
   @ApiProperty({ default: true, required: false })
