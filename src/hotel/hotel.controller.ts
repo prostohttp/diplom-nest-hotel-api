@@ -7,40 +7,46 @@ import {
   Post,
   Put,
   Query,
-  Res,
   UseGuards,
   UsePipes,
   ValidationPipe,
 } from "@nestjs/common";
-import { Response } from "express";
 import { HotelService } from "./hotel.service";
-import { ApiOperation, ApiParam, ApiTags } from "@nestjs/swagger";
-import { HotelDocument } from "./entities/hotel.entity";
-import { ID } from "src/types/id";
+import { ApiOperation, ApiParam, ApiResponse, ApiTags } from "@nestjs/swagger";
 import { UpdateHotelParamsDto } from "./dto/update-hotel-params.dto";
 import { AddHotelParamsDto } from "./dto/add-hotel-params.dto";
 import { SearchHotelParamsDto } from "./dto/search-hotel-params.dto";
 import { IsAuthenticatedGuard } from "src/guards/is-authenticated.guard";
 import { IsAdmin } from "src/guards/is-admin.guard";
+import { AddHotelResponseDto } from "./dto/add-hotel-response.dto";
 
 @ApiTags("API Модуля «Гостиницы»")
 @Controller()
 export class HotelController {
   constructor(private readonly hotelService: HotelService) {}
 
-  @UseGuards(IsAuthenticatedGuard, IsAdmin)
   @ApiOperation({
-    summary: "Добавление гостиницы администратором.",
+    summary: "Добавление гостиницы.",
+    description: "Добавление гостиницы администратором.",
   })
+  @ApiResponse({
+    status: 401,
+    description: "если пользователь не аутентифицирован",
+  })
+  @ApiResponse({
+    status: 403,
+    description: "если роль пользователя не подходит",
+  })
+  @UseGuards(IsAuthenticatedGuard, IsAdmin)
   @UsePipes(ValidationPipe)
   @Post("admin/hotels/")
   async addHotels(
     @Body() data: AddHotelParamsDto,
-  ): Promise<Partial<HotelDocument>> {
+  ): Promise<AddHotelResponseDto> {
     try {
       const hotel = await this.hotelService.create(data);
       return {
-        id: hotel._id,
+        id: hotel._id.toString(),
         title: hotel.title,
         description: hotel.description,
       };
@@ -49,40 +55,55 @@ export class HotelController {
     }
   }
 
-  @UseGuards(IsAuthenticatedGuard, IsAdmin)
   @ApiOperation({
-    summary: "Получение списка гостиниц администратором.",
+    summary: "Получение списка гостиниц.",
+    description: "Получение списка гостиниц администратором.",
   })
+  @ApiResponse({
+    status: 401,
+    description: "если пользователь не аутентифицирован",
+  })
+  @ApiResponse({
+    status: 403,
+    description: "если роль пользователя не подходит",
+  })
+  @UseGuards(IsAuthenticatedGuard, IsAdmin)
   @Get("admin/hotels/")
   async getHotels(
     @Query() params: SearchHotelParamsDto,
-  ): Promise<HotelDocument[]> {
-    return this.hotelService.search(params);
+  ): Promise<AddHotelResponseDto[]> {
+    const hotels = await this.hotelService.search(params);
+    return hotels.map((hotel) => ({
+      id: hotel._id.toString(),
+      title: hotel.title,
+      description: hotel.description,
+    }));
   }
 
-  @UseGuards(IsAuthenticatedGuard, IsAdmin)
   @ApiOperation({
-    summary: "Изменение описания гостиницы администратором.",
+    summary: "Изменение описания гостиницы.",
+    description: "Изменение описания гостиницы администратором.",
   })
   @ApiParam({ name: "id" })
+  @ApiResponse({
+    status: 401,
+    description: "если пользователь не аутентифицирован",
+  })
+  @ApiResponse({
+    status: 403,
+    description: "если роль пользователя не подходит",
+  })
+  @UseGuards(IsAuthenticatedGuard, IsAdmin)
   @Put("admin/hotels/:id")
   async changeHotel(
-    @Param("id") id: ID,
+    @Param("id") id: string,
     @Body() data: UpdateHotelParamsDto,
-    @Res() res: Response,
-  ): Promise<any> {
-    try {
-      const hotel = await this.hotelService.update(id, data);
-      res.json({
-        id: hotel._id,
-        title: hotel.title,
-        description: hotel.description,
-      });
-    } catch (error) {
-      res.status(404).json({
-        error: true,
-        message: error.message,
-      });
-    }
+  ): Promise<AddHotelResponseDto> {
+    const hotel = await this.hotelService.update(id, data);
+    return {
+      id: hotel._id.toString(),
+      title: hotel.title,
+      description: hotel.description,
+    };
   }
 }
