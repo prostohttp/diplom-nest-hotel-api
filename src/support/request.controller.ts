@@ -1,9 +1,9 @@
 import { Controller, Post, Get } from "@nestjs/common";
-import { ChatService } from "./chat.service";
+import { SupportRequestService } from "./request.service";
 
 @Controller("")
-export class ChatController {
-  constructor(private readonly chatService: ChatService) {}
+export class SupportRequestController {
+  constructor(private readonly chatService: SupportRequestService) {}
 
   @Post("client/support-requests/")
   async createMessage() {

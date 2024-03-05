@@ -1,7 +1,7 @@
 import { Module } from "@nestjs/common";
-import { ChatService } from "./chat.service";
-import { ChatGateway } from "./chat.gateway";
-import { ChatController } from "./chat.controller";
+import { SupportRequestService } from "./request.service";
+import { SupportGateway } from "./request.gateway";
+import { SupportRequestController } from "./request.controller";
 import { MongooseModule } from "@nestjs/mongoose";
 import {
   SupportRequest,
@@ -16,7 +16,7 @@ import { Message, MessageSchema } from "./entities/message.entity";
       { name: Message.name, schema: MessageSchema },
     ]),
   ],
-  providers: [ChatGateway, ChatService],
-  controllers: [ChatController],
+  providers: [SupportGateway, SupportRequestService],
+  controllers: [SupportRequestController],
 })
-export class ChatModule {}
+export class SupportRequestModule {}

@@ -3,7 +3,7 @@ import { MongooseModule } from "@nestjs/mongoose";
 import { UserModule } from "./user/user.module";
 import { HotelModule } from "./hotel/hotel.module";
 import { ReservationModule } from "./reservation/reservation.module";
-import { ChatModule } from "./chat/chat.module";
+import { SupportRequestModule } from "./support/request.module";
 import { AuthModule } from "./auth/auth.module";
 import { ConfigModule } from "@nestjs/config";
 
@@ -12,7 +12,7 @@ import { ConfigModule } from "@nestjs/config";
     UserModule,
     HotelModule,
     ReservationModule,
-    ChatModule,
+    SupportRequestModule,
     AuthModule,
     ConfigModule.forRoot(),
     MongooseModule.forRoot(process.env.MONGO_URL_LOCAL),
