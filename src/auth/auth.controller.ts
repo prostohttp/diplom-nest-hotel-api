@@ -7,7 +7,9 @@ import { UserRoles } from "src/types/user-roles";
 import { SignUpDto } from "./dto/user-sign-up.dto";
 import { IsAuthenticatedGuard } from "src/guards/is-authenticated.guard";
 import { IsNotAuthenticatedGuard } from "src/guards/is-not-authenticated.guard";
-import { ApiTags, ApiOperation, ApiBody } from "@nestjs/swagger";
+import { ApiTags, ApiOperation, ApiBody, ApiResponse } from "@nestjs/swagger";
+import { UserSignInResponseDto } from "./dto/user-sign-in-response.dto";
+import { UserSignUpResponseDto } from "./dto/user-sign-up-response.dto";
 
 @ApiTags("API Модуля «Аутентификация и авторизация»")
 @Controller()
@@ -19,6 +21,7 @@ export class AuthController {
 
   @ApiOperation({
     summary: "Вход.",
+    description: "Стартует сессию пользователя и выставляет Cookies.",
   })
   @ApiBody({
     schema: {
@@ -33,9 +36,14 @@ export class AuthController {
       },
     },
   })
+  @ApiResponse({
+    status: 401,
+    description:
+      "Если пользователя с указанным email не существует или пароль неверный",
+  })
   @UseGuards(IsNotAuthenticatedGuard, LocalAuthGuard)
   @Post("auth/login")
-  async login(@Req() req: Request): Promise<any> {
+  async login(@Req() req: Request): Promise<UserSignInResponseDto> {
     const user = await this.authService.login(req);
     return {
       email: user.email,
@@ -46,6 +54,8 @@ export class AuthController {
 
   @ApiOperation({
     summary: "Выход.",
+    description:
+      "Завершает сессию пользователя и удаляет Cookies. Доступно только аутентифицированным пользователям.",
   })
   @UseGuards(IsAuthenticatedGuard)
   @Post("auth/logout")
@@ -55,15 +65,20 @@ export class AuthController {
 
   @ApiOperation({
     summary: "Регистрация.",
+    description: "Позволяет создать пользователя с ролью client в системе.",
+  })
+  @ApiResponse({
+    status: 400,
+    description: "Пользователь с таким email уже существует",
   })
   @Post("client/register")
-  async register(@Body() data: SignUpDto): Promise<any> {
+  async register(@Body() data: SignUpDto): Promise<UserSignUpResponseDto> {
     const user = await this.userService.create({
       ...data,
       role: UserRoles.Client,
     });
     return {
-      id: user._id,
+      id: user._id.toString(),
       email: user.email,
       name: user.name,
     };
