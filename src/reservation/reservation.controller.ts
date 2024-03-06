@@ -13,7 +13,7 @@ import {
 } from "@nestjs/common";
 import { ReservationService } from "./reservation.service";
 import { ReservationDto } from "./dto/reservation.dto";
-import { ApiOperation, ApiQuery, ApiTags } from "@nestjs/swagger";
+import { ApiOperation, ApiQuery, ApiResponse, ApiTags } from "@nestjs/swagger";
 import { Request } from "express";
 import { IsAuthenticatedGuard } from "src/guards/is-authenticated.guard";
 import { IsClient } from "src/guards/is-client.guard";
@@ -24,8 +24,8 @@ import { HotelRoom } from "src/hotel/entities/hotel-room.entity";
 import { Model } from "mongoose";
 import { User } from "src/user/entities/user.entity";
 import { isValidIdHandler } from "src/utils";
-import { ID } from "src/types/id";
 import { IsManager } from "src/guards/is-manager.guard";
+import { AddReservationResponseDto } from "./dto/add-reservation-response.dto";
 
 @ApiTags("API Модуля «Бронирование»")
 @Controller()
@@ -40,13 +40,27 @@ export class ReservationController {
 
   @ApiOperation({
     summary: "Бронирование номера клиентом.",
+    description:
+      "Создаёт бронь на номер на выбранную дату для текущего пользователя.",
+  })
+  @ApiResponse({
+    status: 401,
+    description: "если пользователь не аутентифицирован",
+  })
+  @ApiResponse({
+    status: 403,
+    description: "роль должна быть client",
+  })
+  @ApiResponse({
+    status: 400,
+    description: "номера с указанным ID не существует или он отключен",
   })
   @UseGuards(IsAuthenticatedGuard, IsClient)
   @Post("client/reservations")
   async addClientReservations(
     @Body() reservationDto: ReservationDto,
     @Req() request: Request,
-  ): Promise<any> {
+  ): Promise<AddReservationResponseDto> {
     const { hotelRoom, startDate, endDate } = reservationDto;
     const validHotelRoomId = isValidIdHandler(hotelRoom);
     const client = request.user as User;
@@ -73,8 +87,8 @@ export class ReservationController {
     try {
       const reservation = await this.reservationService.addReservation(data);
       return {
-        startDate: reservation.dateStart,
-        endDate: reservation.dateEnd,
+        startDate: reservation.dateStart.toString(),
+        endDate: reservation.dateEnd.toString(),
         hotelRoom: {
           description: room.description,
           images: room.images,
@@ -89,22 +103,31 @@ export class ReservationController {
     }
   }
 
-  @UseGuards(IsAuthenticatedGuard, IsClient)
   @ApiOperation({
     summary: "Список броней текущего пользователя.",
+    description: "Список броней текущего пользователя.",
+  })
+  @ApiResponse({
+    status: 401,
+    description: "если пользователь не аутентифицирован",
+  })
+  @ApiResponse({
+    status: 403,
+    description: "роль должна быть client",
   })
   @ApiQuery({ name: "dateStart", example: "2009-02-29" })
   @ApiQuery({ name: "dateEnd", example: "2009-04-29" })
+  @UseGuards(IsAuthenticatedGuard, IsClient)
   @Get("client/reservations")
   async getClientReservations(
     @Req() request: Request,
     @Query("dateStart") dateStart: string,
     @Query("dateEnd") dateEnd: string,
-  ): Promise<any[]> {
+  ): Promise<AddReservationResponseDto[]> {
     const client = request.user as User;
     const user = await this.UserModel.findOne({ email: client.email });
     const reservations = await this.reservationService.getReservations({
-      userId: user._id as never as ID,
+      userId: user._id.toString(),
       dateStart: new Date(dateStart),
       dateEnd: new Date(dateEnd),
     });
@@ -112,15 +135,34 @@ export class ReservationController {
     return reservationsHandler(reservations, this);
   }
 
-  @UseGuards(IsAuthenticatedGuard, IsClient)
   @ApiOperation({
     summary: "Отмена бронирования клиентом.",
+    description:
+      "Доступно только аутентифицированным пользователям с ролью client.",
   })
+  @ApiResponse({
+    status: 200,
+    description: "бронь удалена",
+  })
+  @ApiResponse({
+    status: 401,
+    description: "если пользователь не аутентифицирован",
+  })
+  @ApiResponse({
+    status: 403,
+    description:
+      "роль должна быть client, если ID текущего пользователя не совпадает с ID пользователя в брони",
+  })
+  @ApiResponse({
+    status: 400,
+    description: "если брони с указанным ID не существует",
+  })
+  @UseGuards(IsAuthenticatedGuard, IsClient)
   @Delete("client/reservations/:id")
   async removeClientReservations(
     @Param("id") id: string,
     @Req() request: Request,
-  ) {
+  ): Promise<void> {
     const isValidReservationId = isValidIdHandler(id);
     const client = request.user as User;
     const user = await this.UserModel.findOne({ email: client.email });
@@ -140,27 +182,58 @@ export class ReservationController {
     this.reservationService.removeReservation(isValidReservationId);
   }
 
-  @UseGuards(IsAuthenticatedGuard, IsManager)
   @ApiOperation({
     summary: "Список броней конкретного пользователя.",
+    description:
+      "Доступно только аутентифицированным пользователям с ролью manager.",
   })
+  @ApiResponse({
+    status: 401,
+    description: "если пользователь не аутентифицирован",
+  })
+  @ApiResponse({
+    status: 403,
+    description: "роль должна быть manager",
+  })
+  @UseGuards(IsAuthenticatedGuard, IsManager)
   @Get("manager/reservations/:userId")
   async getManagerReservationsForClient(
     @Param("userId") userId: string,
-  ): Promise<any[]> {
-    const reservations = await this.ReservationModel.find({ userId });
+  ): Promise<AddReservationResponseDto[]> {
+    const isValidUserId = isValidIdHandler(userId);
+    const reservations = await this.ReservationModel.find({
+      userId: isValidUserId,
+    });
     return reservationsHandler(reservations, this);
   }
 
-  @UseGuards(IsAuthenticatedGuard, IsManager)
   @ApiOperation({
     summary: "Отмена бронирования менеджером.",
   })
+  @ApiResponse({
+    status: 200,
+    description: "бронь удалена",
+  })
+  @ApiResponse({
+    status: 401,
+    description: "если пользователь не аутентифицирован",
+  })
+  @ApiResponse({
+    status: 403,
+    description: "роль должна быть manager",
+  })
+  @ApiResponse({
+    status: 400,
+    description: "если брони с указанным ID не существует",
+  })
+  @UseGuards(IsAuthenticatedGuard, IsManager)
   @Delete("manager/reservations/:id")
   async removeManagerReservationsForClient(
     @Param("id") id: string,
   ): Promise<void> {
-    const reservation = await this.ReservationModel.findById(id);
+    const validReservationId = isValidIdHandler(id);
+    const reservation =
+      await this.ReservationModel.findById(validReservationId);
     if (!reservation) {
       throw new BadRequestException("Бронь не найдена");
     }

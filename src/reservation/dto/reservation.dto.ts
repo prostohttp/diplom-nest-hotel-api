@@ -6,11 +6,11 @@ export class ReservationDto {
   @ApiProperty({ default: "65de087272633e8bff6a5afd" })
   hotelRoom: string;
 
-  @ApiProperty({ default: "2009-02-29" })
+  @ApiProperty({ default: "2009-02-29", description: "Формат даты YYYY-MM-DD" })
   @IsDateString()
   startDate: string;
 
-  @ApiProperty({ default: "2009-03-29" })
+  @ApiProperty({ default: "2009-03-29", description: "Формат даты YYYY-MM-DD" })
   @IsDateString()
   endDate: string;
 

@@ -14,6 +14,6 @@ export class IsClient implements CanActivate {
     if (user.role === UserRoles.Client) {
       return true;
     }
-    throw new ForbiddenException("Доступ запрещен, вы не менеджер");
+    throw new ForbiddenException("Доступ запрещен, вы не клиент");
   }
 }
