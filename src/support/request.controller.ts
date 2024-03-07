@@ -7,6 +7,7 @@ import {
   BadGatewayException,
   Query,
   Param,
+  Req,
 } from "@nestjs/common";
 import { SupportRequestService } from "./request.service";
 import { ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
@@ -21,6 +22,9 @@ import { MessageResponseDto } from "./dto/message-response.dto";
 import { HistoryMessageResponseDto } from "./dto/history-message-response.dto";
 import { IsReadMessageResponseDto } from "./dto/is-read-message-response.dto";
 import { IsCreatedMessageRequestDto } from "./dto/is-created-message-request.dto";
+import { Request } from "express";
+import { User } from "src/user/entities/user.entity";
+import { UserService } from "src/user/user.service";
 
 @ApiTags("API модуля «Чат с техподдержкой»")
 @Controller()
@@ -29,6 +33,7 @@ export class SupportRequestController {
     private readonly supportRequestService: SupportRequestService,
     private readonly supportClientRequestService: SupportClientService,
     private readonly supportEmployeeRequestService: SupportEmployeeService,
+    private readonly userService: UserService,
   ) {}
 
   @ApiOperation({
@@ -48,8 +53,23 @@ export class SupportRequestController {
   @Post("client/support-requests/")
   async createMessage(
     @Body() data: CreateMessageDto,
+    @Req() request: Request,
   ): Promise<CreateMessageRequestDto[]> {
-    throw new BadGatewayException("Bad gateway error");
+    const client = request.user as User;
+    const user = await this.userService.findByEmail(client.email);
+    const supportRequest =
+      await this.supportClientRequestService.createSupportRequest({
+        user: user._id.toString(),
+        text: data.text,
+      });
+    return [
+      {
+        id: supportRequest["_id"].toString(),
+        createdAt: new Date().toString(),
+        isActive: true,
+        hasNewMessages: false,
+      },
+    ];
   }
 
   @ApiOperation({

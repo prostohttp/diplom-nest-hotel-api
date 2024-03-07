@@ -8,6 +8,8 @@ import {
   SupportRequestSchema,
 } from "./entities/support-request.entity";
 import { Message, MessageSchema } from "./entities/message.entity";
+import { UserService } from "src/user/user.service";
+import { User, UserSchema } from "src/user/entities/user.entity";
 import { SupportClientService } from "./client/client.service";
 import { SupportEmployeeService } from "./employee/employee.service";
 
@@ -16,6 +18,7 @@ import { SupportEmployeeService } from "./employee/employee.service";
     MongooseModule.forFeature([
       { name: SupportRequest.name, schema: SupportRequestSchema },
       { name: Message.name, schema: MessageSchema },
+      { name: User.name, schema: UserSchema },
     ]),
   ],
   providers: [
@@ -23,6 +26,7 @@ import { SupportEmployeeService } from "./employee/employee.service";
     SupportRequestService,
     SupportClientService,
     SupportEmployeeService,
+    UserService,
   ],
   controllers: [SupportRequestController],
 })

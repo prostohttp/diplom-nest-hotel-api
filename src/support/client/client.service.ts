@@ -1,19 +1,79 @@
-import { Injectable } from "@nestjs/common";
+import { BadRequestException, Injectable } from "@nestjs/common";
 import { ISupportRequestClientService } from "../interfaces/support-request-client-service.interface";
 import { ID } from "src/types/id";
 import { SupportRequest } from "../entities/support-request.entity";
 import { CreateSupportRequestDto } from "../interfaces/create-support-request-dto.interface";
 import { MarkMessagesAsReadDto } from "../interfaces/mark-messages-as-read-dto.interface";
+import { InjectModel } from "@nestjs/mongoose";
+import { Model } from "mongoose";
+import { Message } from "../entities/message.entity";
 
 @Injectable()
 export class SupportClientService implements ISupportRequestClientService {
-  createSupportRequest(data: CreateSupportRequestDto): Promise<SupportRequest> {
-    throw new Error("Method not implemented.");
+  constructor(
+    @InjectModel(SupportRequest.name)
+    private supportRequestModel: Model<SupportRequest>,
+    @InjectModel(Message.name) private messageModel: Model<Message>,
+  ) {}
+  async createSupportRequest(
+    data: CreateSupportRequestDto,
+  ): Promise<SupportRequest> {
+    const message = new this.messageModel({
+      author: data.user,
+      sentAt: new Date(),
+      text: data.text,
+    });
+    await message.save();
+
+    const supportRequest = new this.supportRequestModel({
+      user: data.user,
+      createdAt: new Date(),
+      messages: [message._id],
+      isActive: true,
+    });
+    return supportRequest.save();
   }
-  markMessagesAsRead(params: MarkMessagesAsReadDto) {
-    throw new Error("Method not implemented.");
+  async markMessagesAsRead(params: MarkMessagesAsReadDto) {
+    try {
+      const {
+        user: userId,
+        supportRequest: supportRequestId,
+        createdBefore,
+      } = params;
+      const supportRequest =
+        await this.supportRequestModel.findById(supportRequestId);
+
+      const messageIds = supportRequest.messages;
+
+      const messagesToUpdate = await this.messageModel.find({
+        _id: { $in: messageIds },
+        author: { $ne: userId },
+        sentAt: { $lt: createdBefore },
+        readAt: { $exists: false },
+      });
+
+      await Promise.all(
+        messagesToUpdate.map(async (message) => {
+          message.readAt = new Date();
+          await message.save();
+        }),
+      );
+    } catch (error) {
+      throw new BadRequestException(error.message);
+    }
   }
-  getUnreadCount(supportRequest: ID): Promise<number> {
-    throw new Error("Method not implemented.");
+  async getUnreadCount(supportRequest: ID): Promise<number> {
+    const fondedSupportRequest =
+      await this.supportRequestModel.findById(supportRequest);
+    const userId = fondedSupportRequest.user;
+    const messageIds = fondedSupportRequest.messages;
+
+    const messages = await this.messageModel.find({
+      _id: { $in: messageIds },
+      author: { $ne: userId },
+      readAt: { $exists: false },
+    });
+
+    return messages.length;
   }
 }

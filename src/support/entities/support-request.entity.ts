@@ -5,7 +5,7 @@ export type SupportRequestDocument = HydratedDocument<SupportRequest>;
 
 @Schema()
 export class SupportRequest {
-  @Prop({ required: true, ref: "Message" })
+  @Prop({ required: true, ref: "User" })
   user: MongooseSchema.Types.ObjectId;
 
   @Prop({ required: true })

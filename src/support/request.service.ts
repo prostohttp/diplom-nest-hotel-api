@@ -5,18 +5,46 @@ import { Message } from "./entities/message.entity";
 import { SupportRequest } from "./entities/support-request.entity";
 import { GetChatListParams } from "./interfaces/get-chat-list-params.interface";
 import { SendMessageDto } from "./interfaces/send-message-dto.interface";
+import { InjectModel } from "@nestjs/mongoose";
+import { Model } from "mongoose";
 
 @Injectable()
 export class SupportRequestService implements ISupportRequestService {
+  constructor(
+    @InjectModel(SupportRequest.name)
+    private supportRequestModel: Model<SupportRequest>,
+    @InjectModel(Message.name)
+    private messageModel: Model<Message>,
+  ) {}
+
   findSupportRequests(params: GetChatListParams): Promise<SupportRequest[]> {
-    throw new Error("Method not implemented.");
+    const { user, isActive } = params;
+    if (!user) {
+      return this.supportRequestModel.find({ isActive });
+    }
+    return this.supportRequestModel.find({ user, isActive });
   }
-  sendMessage(data: SendMessageDto): Promise<Message> {
-    throw new Error("Method not implemented.");
+
+  async sendMessage(data: SendMessageDto): Promise<Message> {
+    const { author, supportRequest, text } = data;
+    const message = new this.messageModel({
+      author,
+      sentAt: new Date(),
+      text,
+    });
+    await message.save();
+    await this.supportRequestModel.findByIdAndUpdate(supportRequest, {
+      $push: { messages: message._id },
+    });
+    return message;
   }
+
   getMessages(supportRequest: ID): Promise<Message[]> {
-    throw new Error("Method not implemented.");
+    return this.supportRequestModel
+      .findById(supportRequest)
+      .populate("messages");
   }
+
   subscribe(
     handler: (supportRequest: SupportRequest, message: Message) => void,
   ): () => void {
