@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from "@nestjs/common";
+import { Injectable } from "@nestjs/common";
 import { ISupportRequestClientService } from "../interfaces/support-request-client-service.interface";
 import { ID } from "src/types/id";
 import { SupportRequest } from "../entities/support-request.entity";
@@ -34,33 +34,29 @@ export class SupportClientService implements ISupportRequestClientService {
     return supportRequest.save();
   }
   async markMessagesAsRead(params: MarkMessagesAsReadDto) {
-    try {
-      const {
-        user: userId,
-        supportRequest: supportRequestId,
-        createdBefore,
-      } = params;
-      const supportRequest =
-        await this.supportRequestModel.findById(supportRequestId);
+    const {
+      user: userId,
+      supportRequest: supportRequestId,
+      createdBefore,
+    } = params;
+    const supportRequest =
+      await this.supportRequestModel.findById(supportRequestId);
 
-      const messageIds = supportRequest.messages;
+    const messageIds = supportRequest.messages;
 
-      const messagesToUpdate = await this.messageModel.find({
-        _id: { $in: messageIds },
-        author: { $ne: userId },
-        sentAt: { $lt: createdBefore },
-        readAt: { $exists: false },
-      });
+    const messagesToUpdate = await this.messageModel.find({
+      _id: { $in: messageIds },
+      author: { $ne: userId },
+      sentAt: { $lt: createdBefore },
+      readAt: { $exists: false },
+    });
 
-      await Promise.all(
-        messagesToUpdate.map(async (message) => {
-          message.readAt = new Date();
-          await message.save();
-        }),
-      );
-    } catch (error) {
-      throw new BadRequestException(error.message);
-    }
+    await Promise.all(
+      messagesToUpdate.map(async (message) => {
+        message.readAt = new Date();
+        await message.save();
+      }),
+    );
   }
   async getUnreadCount(supportRequest: ID): Promise<number> {
     const fondedSupportRequest =

@@ -1,4 +1,5 @@
 import { ApiProperty } from "@nestjs/swagger";
+import { CreateMessageRequestDto } from "./create-message-request.dto";
 
 export class MessageResponseDto {
   @ApiProperty()
@@ -14,10 +15,5 @@ export class MessageResponseDto {
   hasNewMessages: boolean;
 
   @ApiProperty()
-  client: {
-    id: string;
-    name: string;
-    email: string;
-    contactPhone: string;
-  };
+  client: CreateMessageRequestDto;
 }

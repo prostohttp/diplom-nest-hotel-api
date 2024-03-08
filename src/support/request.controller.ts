@@ -25,6 +25,7 @@ import { IsCreatedMessageRequestDto } from "./dto/is-created-message-request.dto
 import { Request } from "express";
 import { User } from "src/user/entities/user.entity";
 import { UserService } from "src/user/user.service";
+import { SupportRequest } from "./entities/support-request.entity";
 
 @ApiTags("API модуля «Чат с техподдержкой»")
 @Controller()
@@ -87,12 +88,41 @@ export class SupportRequestController {
   })
   @UseGuards(IsAuthenticatedGuard, IsClient)
   @Get("client/support-requests/")
-  async getMessages(
+  async getSupportRequests(
+    @Req() request: Request,
     @Query("limit") limit: string,
     @Query("offset") offset: string,
-    @Query("isActive") isActive: string,
+    @Query("isActive") isActive: boolean,
   ): Promise<CreateMessageRequestDto[]> {
-    throw new BadGatewayException("Bad gateway error");
+    const client = request.user as User;
+    const user = await this.userService.findByEmail(client.email);
+    const userId = user._id.toString();
+
+    const parsedLimit = limit ? parseInt(limit, 10) : null;
+    const parsedOffset = offset ? parseInt(offset, 10) : null;
+
+    let supportRequests = await this.supportRequestService.findSupportRequests({
+      user: userId,
+      isActive: isActive,
+    });
+
+    if (parsedLimit !== null && parsedOffset !== null) {
+      supportRequests = supportRequests.slice(
+        parsedOffset,
+        parsedOffset + parsedLimit,
+      );
+    }
+
+    const messages = await this.supportRequestService.getMessages(userId);
+
+    return supportRequests.map((request) => {
+      return {
+        id: request["_id"].toString(),
+        createdAt: new Date().toString(),
+        isActive: request.isActive,
+        hasNewMessages: !messages.every((message) => message.readAt),
+      };
+    });
   }
 
   @ApiOperation({
@@ -110,7 +140,7 @@ export class SupportRequestController {
   })
   @UseGuards(IsAuthenticatedGuard, IsManager)
   @Get("manager/support-requests/")
-  async getMessagesForManager(
+  async getSupportRequestsForManager(
     @Query("limit") limit: string,
     @Query("offset") offset: string,
     @Query("isActive") isActive: string,
