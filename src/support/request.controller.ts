@@ -26,6 +26,8 @@ import { Request } from "express";
 import { User } from "src/user/entities/user.entity";
 import { UserService } from "src/user/user.service";
 import { SupportRequest } from "./entities/support-request.entity";
+import { Model } from "mongoose";
+import { InjectModel } from "@nestjs/mongoose";
 
 @ApiTags("API модуля «Чат с техподдержкой»")
 @Controller()
@@ -35,6 +37,8 @@ export class SupportRequestController {
     private readonly supportClientRequestService: SupportClientService,
     private readonly supportEmployeeRequestService: SupportEmployeeService,
     private readonly userService: UserService,
+    @InjectModel(SupportRequest.name)
+    private supportRequestModel: Model<SupportRequest>,
   ) {}
 
   @ApiOperation({
@@ -113,16 +117,20 @@ export class SupportRequestController {
       );
     }
 
-    const messages = await this.supportRequestService.getMessages(userId);
-
-    return supportRequests.map((request) => {
+    const supportRequestPromises = supportRequests.map(async (request) => {
+      const messages = await this.supportRequestService.getMessages(
+        request["_id"],
+      );
+      const hasNewMessages = !messages.every((message) => message.readAt);
       return {
         id: request["_id"].toString(),
         createdAt: new Date().toString(),
         isActive: request.isActive,
-        hasNewMessages: !messages.every((message) => message.readAt),
+        hasNewMessages: hasNewMessages,
       };
     });
+
+    return Promise.all(supportRequestPromises);
   }
 
   @ApiOperation({
@@ -141,11 +149,34 @@ export class SupportRequestController {
   @UseGuards(IsAuthenticatedGuard, IsManager)
   @Get("manager/support-requests/")
   async getSupportRequestsForManager(
-    @Query("limit") limit: string,
-    @Query("offset") offset: string,
-    @Query("isActive") isActive: string,
+    @Query("limit") limit: number,
+    @Query("offset") offset: number,
+    @Query("isActive") isActive: boolean = true,
   ): Promise<MessageResponseDto[]> {
-    throw new BadGatewayException("Bad gateway error");
+    const allRequests = await this.supportRequestModel
+      .find({ isActive })
+      .limit(limit)
+      .skip(offset);
+    const supportRequests = allRequests.map(async (request) => {
+      const user = await this.userService.findById(request.user);
+      const messages = await this.supportRequestService.getMessages(
+        request._id.toString(),
+      );
+      const hasNewMessages = !messages.every((message) => message.readAt);
+      return {
+        id: request._id.toString(),
+        createdAt: request.createdAt.toString(),
+        isActive: request.isActive,
+        hasNewMessages: hasNewMessages,
+        client: {
+          id: user._id.toString(),
+          name: user.name,
+          email: user.email,
+          contactPhone: user.contactPhone,
+        },
+      };
+    });
+    return Promise.all(supportRequests);
   }
 
   @ApiOperation({

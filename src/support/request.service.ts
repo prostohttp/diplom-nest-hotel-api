@@ -39,10 +39,11 @@ export class SupportRequestService implements ISupportRequestService {
     return message;
   }
 
-  getMessages(supportRequest: ID): Promise<Message[]> {
-    return this.supportRequestModel
+  async getMessages(supportRequest: ID): Promise<Message[]> {
+    const requestWithMessages = (await this.supportRequestModel
       .findById(supportRequest)
-      .populate("messages");
+      .populate("messages")) as any;
+    return requestWithMessages.messages;
   }
 
   subscribe(

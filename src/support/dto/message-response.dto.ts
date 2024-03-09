@@ -15,5 +15,10 @@ export class MessageResponseDto {
   hasNewMessages: boolean;
 
   @ApiProperty()
-  client: CreateMessageRequestDto;
+  client: {
+    id: string;
+    name: string;
+    email: string;
+    contactPhone: string;
+  };
 }
