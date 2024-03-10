@@ -11,6 +11,7 @@
     "start": "nest start",
     "start:swc": "nest start -b swc --type-check",
     "start:dev": "nest start --type-check --watch",
+    "docker:start": "docker-compose up --build",
     "start:dev:swc": "nest start -b swc --type-check -w",
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/main",
