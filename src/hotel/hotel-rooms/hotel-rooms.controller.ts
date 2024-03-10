@@ -34,7 +34,6 @@ import { HotelRoomsService } from "./hotel-rooms.service";
 import { AddHotelRoomParamsDto } from "../dto/add-hotel-room-params.dto";
 import { HotelService } from "../hotel.service";
 import { storageConfig } from "./config/disk-storage";
-import { HotelRoomDocument } from "../entities/hotel-room.entity";
 import { UpdateHotelRoomParamsDto } from "../dto/update-hotel-room-params.dto";
 import { IsAdmin } from "src/guards/is-admin.guard";
 import { IsAuthenticatedGuard } from "src/guards/is-authenticated.guard";

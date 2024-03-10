@@ -3,5 +3,5 @@ import { SupportRequestService } from "./request.service";
 
 @WebSocketGateway()
 export class SupportGateway {
-  constructor(private readonly chatService: SupportRequestService) {}
+  constructor(private readonly supportRequestService: SupportRequestService) {}
 }

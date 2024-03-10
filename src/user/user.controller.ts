@@ -7,10 +7,10 @@ import {
   UsePipes,
   Query,
   UseGuards,
+  BadRequestException,
 } from "@nestjs/common";
 import { UserService } from "./user.service";
 import { CreateUserDto } from "./dto/create-user.dto";
-import { UserDocument } from "./entities/user.entity";
 import { SearchUserDto } from "./dto/search-user.dto";
 import { ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
 import { IsAdmin } from "src/guards/is-admin.guard";
@@ -41,14 +41,18 @@ export class UserController {
   @UsePipes(ValidationPipe)
   @Post("admin/users/")
   async create(@Body() data: CreateUserDto): Promise<CreateUserResponseDto> {
-    const user = await this.userService.create(data);
-    return {
-      id: user._id.toString(),
-      email: user.email,
-      name: user.name,
-      contactPhone: user.contactPhone,
-      role: user.role,
-    };
+    try {
+      const user = await this.userService.create(data);
+      return {
+        id: user._id.toString(),
+        email: user.email,
+        name: user.name,
+        contactPhone: user.contactPhone,
+        role: user.role,
+      };
+    } catch (error) {
+      throw new BadRequestException(error.message);
+    }
   }
 
   @ApiOperation({
@@ -68,13 +72,17 @@ export class UserController {
   async getUserForAdmin(
     @Query() params: SearchUserDto,
   ): Promise<GetUserResponseDto[]> {
-    const users = await this.userService.findAll(params);
-    return users.map(({ _id, email, name, contactPhone }) => ({
-      id: _id.toString(),
-      email,
-      name,
-      contactPhone,
-    }));
+    try {
+      const users = await this.userService.findAll(params);
+      return users.map(({ _id, email, name, contactPhone }) => ({
+        id: _id.toString(),
+        email,
+        name,
+        contactPhone,
+      }));
+    } catch (error) {
+      throw new BadRequestException(error.message);
+    }
   }
 
   @ApiOperation({
@@ -94,12 +102,16 @@ export class UserController {
   async getUserForManager(
     @Query() params: SearchUserDto,
   ): Promise<GetUserResponseDto[]> {
-    const users = await this.userService.findAll(params);
-    return users.map(({ _id, email, name, contactPhone }) => ({
-      id: _id.toString(),
-      email,
-      name,
-      contactPhone,
-    }));
+    try {
+      const users = await this.userService.findAll(params);
+      return users.map(({ _id, email, name, contactPhone }) => ({
+        id: _id.toString(),
+        email,
+        name,
+        contactPhone,
+      }));
+    } catch (error) {
+      throw new BadRequestException(error.message);
+    }
   }
 }

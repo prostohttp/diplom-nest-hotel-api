@@ -9,6 +9,7 @@ import {
   Req,
   NotFoundException,
   ForbiddenException,
+  BadRequestException,
 } from "@nestjs/common";
 import { SupportRequestService } from "./request.service";
 import { ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
@@ -64,21 +65,25 @@ export class SupportRequestController {
     @Body() data: CreateMessageDto,
     @Req() request: Request,
   ): Promise<CreateMessageRequestDto[]> {
-    const client = request.user as User;
-    const user = await this.userService.findByEmail(client.email);
-    const supportRequest =
-      await this.supportClientRequestService.createSupportRequest({
-        user: user._id.toString(),
-        text: data.text,
-      });
-    return [
-      {
-        id: supportRequest["_id"].toString(),
-        createdAt: new Date().toString(),
-        isActive: true,
-        hasNewMessages: false,
-      },
-    ];
+    try {
+      const client = request.user as User;
+      const user = await this.userService.findByEmail(client.email);
+      const supportRequest =
+        await this.supportClientRequestService.createSupportRequest({
+          user: user._id.toString(),
+          text: data.text,
+        });
+      return [
+        {
+          id: supportRequest["_id"].toString(),
+          createdAt: new Date().toString(),
+          isActive: true,
+          hasNewMessages: false,
+        },
+      ];
+    } catch (error) {
+      throw new BadRequestException(error.message);
+    }
   }
 
   @ApiOperation({
@@ -102,39 +107,44 @@ export class SupportRequestController {
     @Query("offset") offset: string,
     @Query("isActive") isActive: boolean,
   ): Promise<CreateMessageRequestDto[]> {
-    const client = request.user as User;
-    const user = await this.userService.findByEmail(client.email);
-    const userId = user._id.toString();
+    try {
+      const client = request.user as User;
+      const user = await this.userService.findByEmail(client.email);
+      const userId = user._id.toString();
 
-    const parsedLimit = limit ? parseInt(limit, 10) : null;
-    const parsedOffset = offset ? parseInt(offset, 10) : null;
+      const parsedLimit = limit ? parseInt(limit, 10) : null;
+      const parsedOffset = offset ? parseInt(offset, 10) : null;
 
-    let supportRequests = await this.supportRequestService.findSupportRequests({
-      user: userId,
-      isActive: isActive,
-    });
+      let supportRequests =
+        await this.supportRequestService.findSupportRequests({
+          user: userId,
+          isActive: isActive,
+        });
 
-    if (parsedLimit !== null && parsedOffset !== null) {
-      supportRequests = supportRequests.slice(
-        parsedOffset,
-        parsedOffset + parsedLimit,
-      );
+      if (parsedLimit !== null && parsedOffset !== null) {
+        supportRequests = supportRequests.slice(
+          parsedOffset,
+          parsedOffset + parsedLimit,
+        );
+      }
+
+      const supportRequestPromises = supportRequests.map(async (request) => {
+        const messages = await this.supportRequestService.getMessages(
+          request["_id"],
+        );
+        const hasNewMessages = !messages.every((message) => message.readAt);
+        return {
+          id: request["_id"].toString(),
+          createdAt: new Date().toString(),
+          isActive: request.isActive,
+          hasNewMessages: hasNewMessages,
+        };
+      });
+
+      return Promise.all(supportRequestPromises);
+    } catch (error) {
+      throw new BadRequestException(error.message);
     }
-
-    const supportRequestPromises = supportRequests.map(async (request) => {
-      const messages = await this.supportRequestService.getMessages(
-        request["_id"],
-      );
-      const hasNewMessages = !messages.every((message) => message.readAt);
-      return {
-        id: request["_id"].toString(),
-        createdAt: new Date().toString(),
-        isActive: request.isActive,
-        hasNewMessages: hasNewMessages,
-      };
-    });
-
-    return Promise.all(supportRequestPromises);
   }
 
   @ApiOperation({
@@ -157,30 +167,34 @@ export class SupportRequestController {
     @Query("offset") offset: number,
     @Query("isActive") isActive: boolean = true,
   ): Promise<MessageResponseDto[]> {
-    const allRequests = await this.supportRequestModel
-      .find({ isActive })
-      .limit(limit)
-      .skip(offset);
-    const supportRequests = allRequests.map(async (request) => {
-      const user = await this.userService.findById(request.user);
-      const messages = await this.supportRequestService.getMessages(
-        request._id.toString(),
-      );
-      const hasNewMessages = !messages.every((message) => message.readAt);
-      return {
-        id: request._id.toString(),
-        createdAt: request.createdAt.toString(),
-        isActive: request.isActive,
-        hasNewMessages: hasNewMessages,
-        client: {
-          id: user._id.toString(),
-          name: user.name,
-          email: user.email,
-          contactPhone: user.contactPhone,
-        },
-      };
-    });
-    return Promise.all(supportRequests);
+    try {
+      const allRequests = await this.supportRequestModel
+        .find({ isActive })
+        .limit(limit)
+        .skip(offset);
+      const supportRequests = allRequests.map(async (request) => {
+        const user = await this.userService.findById(request.user);
+        const messages = await this.supportRequestService.getMessages(
+          request._id.toString(),
+        );
+        const hasNewMessages = !messages.every((message) => message.readAt);
+        return {
+          id: request._id.toString(),
+          createdAt: request.createdAt.toString(),
+          isActive: request.isActive,
+          hasNewMessages: hasNewMessages,
+          client: {
+            id: user._id.toString(),
+            name: user.name,
+            email: user.email,
+            contactPhone: user.contactPhone,
+          },
+        };
+      });
+      return Promise.all(supportRequests);
+    } catch (error) {
+      throw new BadRequestException(error.message);
+    }
   }
 
   @ApiOperation({
@@ -202,38 +216,42 @@ export class SupportRequestController {
     @Param("id") id: string,
     @Req() request: Request,
   ): Promise<HistoryMessageResponseDto[]> {
-    const user = request.user as User;
-    const client = await this.userService.findByEmail(user.email);
-    const isValidSupportRequest = isValidIdHandler(id);
-    const supportRequest = await this.supportRequestModel.findById(
-      isValidSupportRequest,
-    );
-    if (!supportRequest) {
-      throw new NotFoundException("Такого обращения нет");
-    }
-    if (
-      user.role === UserRoles.Client &&
-      client._id.toString() !== supportRequest.user.toString()
-    ) {
-      throw new ForbiddenException("У вас нет доступа к этому обращению");
-    }
-    const supportRequestMessages =
-      await this.supportRequestService.getMessages(id);
-    const messages = supportRequestMessages.map(async (message) => {
-      const author = await this.userService.findById(message.author);
-      return {
-        id: message["_id"],
-        createdAt: message.sentAt.toString(),
-        text: message.text,
-        readAt: message.readAt ? message.readAt.toString() : null,
-        author: {
-          id: author._id.toString(),
-          name: author.name,
-        },
-      };
-    });
+    try {
+      const user = request.user as User;
+      const client = await this.userService.findByEmail(user.email);
+      const isValidSupportRequest = isValidIdHandler(id);
+      const supportRequest = await this.supportRequestModel.findById(
+        isValidSupportRequest,
+      );
+      if (!supportRequest) {
+        throw new NotFoundException("Такого обращения нет");
+      }
+      if (
+        user.role === UserRoles.Client &&
+        client._id.toString() !== supportRequest.user.toString()
+      ) {
+        throw new ForbiddenException("У вас нет доступа к этому обращению");
+      }
+      const supportRequestMessages =
+        await this.supportRequestService.getMessages(id);
+      const messages = supportRequestMessages.map(async (message) => {
+        const author = await this.userService.findById(message.author);
+        return {
+          id: message["_id"],
+          createdAt: message.sentAt.toString(),
+          text: message.text,
+          readAt: message.readAt ? message.readAt.toString() : null,
+          author: {
+            id: author._id.toString(),
+            name: author.name,
+          },
+        };
+      });
 
-    return Promise.all(messages);
+      return Promise.all(messages);
+    } catch (error) {
+      throw new BadRequestException(error.message);
+    }
   }
 
   @ApiOperation({
@@ -256,39 +274,43 @@ export class SupportRequestController {
     @Param("id") id: string,
     @Req() request: Request,
   ): Promise<HistoryMessageResponseDto[]> {
-    const user = request.user as User;
-    const client = await this.userService.findByEmail(user.email);
-    const isValidSupportRequest = isValidIdHandler(id);
-    const supportRequest = await this.supportRequestModel.findById(
-      isValidSupportRequest,
-    );
-    if (!supportRequest) {
-      throw new NotFoundException("Такого обращения нет");
-    }
-    if (
-      user.role === UserRoles.Client &&
-      client._id.toString() !== supportRequest.user.toString()
-    ) {
-      throw new ForbiddenException("У вас нет доступа к этому обращению");
-    }
-    const message = await this.supportRequestService.sendMessage({
-      author: client._id.toString(),
-      supportRequest: isValidSupportRequest,
-      text: data.text,
-    });
+    try {
+      const user = request.user as User;
+      const client = await this.userService.findByEmail(user.email);
+      const isValidSupportRequest = isValidIdHandler(id);
+      const supportRequest = await this.supportRequestModel.findById(
+        isValidSupportRequest,
+      );
+      if (!supportRequest) {
+        throw new NotFoundException("Такого обращения нет");
+      }
+      if (
+        user.role === UserRoles.Client &&
+        client._id.toString() !== supportRequest.user.toString()
+      ) {
+        throw new ForbiddenException("У вас нет доступа к этому обращению");
+      }
+      const message = await this.supportRequestService.sendMessage({
+        author: client._id.toString(),
+        supportRequest: isValidSupportRequest,
+        text: data.text,
+      });
 
-    return [
-      {
-        id: supportRequest._id.toString(),
-        createdAt: message.sentAt.toString(),
-        text: message.text,
-        readAt: message.readAt ? message.readAt.toString() : null,
-        author: {
-          id: client._id.toString(),
-          name: client.name,
+      return [
+        {
+          id: supportRequest._id.toString(),
+          createdAt: message.sentAt.toString(),
+          text: message.text,
+          readAt: message.readAt ? message.readAt.toString() : null,
+          author: {
+            id: client._id.toString(),
+            name: client.name,
+          },
         },
-      },
-    ];
+      ];
+    } catch (error) {
+      throw new BadRequestException(error.message);
+    }
   }
 
   @ApiOperation({
@@ -311,22 +333,23 @@ export class SupportRequestController {
     @Param("id") id: string,
     @Req() request: Request,
   ): Promise<IsReadMessageResponseDto> {
-    const user = request.user as User;
-    const client = await this.userService.findByEmail(user.email);
-    const isValidSupportRequest = isValidIdHandler(id);
-    const supportRequest = await this.supportRequestModel.findById(
-      isValidSupportRequest,
-    );
-    if (!supportRequest) {
-      throw new NotFoundException("Такого обращения нет");
-    }
-    if (
-      user.role === UserRoles.Client &&
-      client._id.toString() !== supportRequest.user.toString()
-    ) {
-      throw new ForbiddenException("У вас нет доступа к этому обращению");
-    }
     try {
+      const user = request.user as User;
+      const client = await this.userService.findByEmail(user.email);
+      const isValidSupportRequest = isValidIdHandler(id);
+      const supportRequest = await this.supportRequestModel.findById(
+        isValidSupportRequest,
+      );
+      if (!supportRequest) {
+        throw new NotFoundException("Такого обращения нет");
+      }
+      if (
+        user.role === UserRoles.Client &&
+        client._id.toString() !== supportRequest.user.toString()
+      ) {
+        throw new ForbiddenException("У вас нет доступа к этому обращению");
+      }
+
       if (user.role === UserRoles.Manager) {
         await this.supportEmployeeRequestService.markMessagesAsRead({
           user: client._id.toString(),
@@ -345,9 +368,7 @@ export class SupportRequestController {
         success: true,
       };
     } catch (error) {
-      return {
-        success: false,
-      };
+      throw new BadRequestException(error.message);
     }
   }
 }

@@ -1,4 +1,12 @@
-import { Body, Controller, Post, Req, Res, UseGuards } from "@nestjs/common";
+import {
+  BadRequestException,
+  Body,
+  Controller,
+  Post,
+  Req,
+  Res,
+  UseGuards,
+} from "@nestjs/common";
 import { AuthService } from "./auth.service";
 import { LocalAuthGuard } from "src/guards/auth.guard";
 import { Request, Response } from "express";
@@ -44,12 +52,16 @@ export class AuthController {
   @UseGuards(IsNotAuthenticatedGuard, LocalAuthGuard)
   @Post("auth/login")
   async login(@Req() req: Request): Promise<UserSignInResponseDto> {
-    const user = await this.authService.login(req);
-    return {
-      email: user.email,
-      name: user.name,
-      contactPhone: user.contactPhone,
-    };
+    try {
+      const user = await this.authService.login(req);
+      return {
+        email: user.email,
+        name: user.name,
+        contactPhone: user.contactPhone,
+      };
+    } catch (error) {
+      throw new BadRequestException(error.message);
+    }
   }
 
   @ApiOperation({
@@ -60,7 +72,11 @@ export class AuthController {
   @UseGuards(IsAuthenticatedGuard)
   @Post("auth/logout")
   logout(@Req() request: Request, @Res() response: Response): Promise<any> {
-    return this.authService.logout(request, response);
+    try {
+      return this.authService.logout(request, response);
+    } catch (error) {
+      throw new BadRequestException(error.message);
+    }
   }
 
   @ApiOperation({
@@ -73,14 +89,18 @@ export class AuthController {
   })
   @Post("client/register")
   async register(@Body() data: SignUpDto): Promise<UserSignUpResponseDto> {
-    const user = await this.userService.create({
-      ...data,
-      role: UserRoles.Client,
-    });
-    return {
-      id: user._id.toString(),
-      email: user.email,
-      name: user.name,
-    };
+    try {
+      const user = await this.userService.create({
+        ...data,
+        role: UserRoles.Client,
+      });
+      return {
+        id: user._id.toString(),
+        email: user.email,
+        name: user.name,
+      };
+    } catch (error) {
+      throw new BadRequestException(error.message);
+    }
   }
 }

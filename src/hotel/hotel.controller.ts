@@ -72,12 +72,16 @@ export class HotelController {
   async getHotels(
     @Query() params: SearchHotelParamsDto,
   ): Promise<AddHotelResponseDto[]> {
-    const hotels = await this.hotelService.search(params);
-    return hotels.map((hotel) => ({
-      id: hotel._id.toString(),
-      title: hotel.title,
-      description: hotel.description,
-    }));
+    try {
+      const hotels = await this.hotelService.search(params);
+      return hotels.map((hotel) => ({
+        id: hotel._id.toString(),
+        title: hotel.title,
+        description: hotel.description,
+      }));
+    } catch (error) {
+      throw new BadRequestException(error.message);
+    }
   }
 
   @ApiOperation({
@@ -99,11 +103,15 @@ export class HotelController {
     @Param("id") id: string,
     @Body() data: UpdateHotelParamsDto,
   ): Promise<AddHotelResponseDto> {
-    const hotel = await this.hotelService.update(id, data);
-    return {
-      id: hotel._id.toString(),
-      title: hotel.title,
-      description: hotel.description,
-    };
+    try {
+      const hotel = await this.hotelService.update(id, data);
+      return {
+        id: hotel._id.toString(),
+        title: hotel.title,
+        description: hotel.description,
+      };
+    } catch (error) {
+      throw new BadRequestException(error.message);
+    }
   }
 }
