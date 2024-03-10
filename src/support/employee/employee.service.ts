@@ -25,14 +25,12 @@ export class SupportEmployeeService implements ISupportRequestEmployeeService {
       await this.supportRequestModel.findById(supportRequestId);
 
     const messageIds = supportRequest.messages;
-
     const messagesToUpdate = await this.messageModel.find({
       _id: { $in: messageIds },
-      author: userId,
+      author: { $ne: userId },
       sentAt: { $lt: createdBefore },
       readAt: { $exists: false },
     });
-
     await Promise.all(
       messagesToUpdate.map(async (message) => {
         message.readAt = new Date();

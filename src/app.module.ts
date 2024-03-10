@@ -6,6 +6,11 @@ import { ReservationModule } from "./reservation/reservation.module";
 import { SupportRequestModule } from "./support/request.module";
 import { AuthModule } from "./auth/auth.module";
 import { ConfigModule } from "@nestjs/config";
+import mongoose from "mongoose";
+
+mongoose.set("toJSON", {
+  versionKey: false,
+});
 
 @Module({
   imports: [

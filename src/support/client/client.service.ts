@@ -43,7 +43,6 @@ export class SupportClientService implements ISupportRequestClientService {
       await this.supportRequestModel.findById(supportRequestId);
 
     const messageIds = supportRequest.messages;
-
     const messagesToUpdate = await this.messageModel.find({
       _id: { $in: messageIds },
       author: { $ne: userId },

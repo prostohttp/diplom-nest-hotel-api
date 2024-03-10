@@ -3,8 +3,8 @@ import { SwaggerModule } from "@nestjs/swagger";
 import helmet from "helmet";
 import * as session from "express-session";
 import * as cookieParser from "cookie-parser";
-import { useContainer } from "class-validator";
 import * as passport from "passport";
+import { useContainer } from "class-validator";
 
 import { AppModule } from "./app.module";
 import { swaggerConfig } from "./config/swagger.config";

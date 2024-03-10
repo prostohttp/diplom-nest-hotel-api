@@ -4,7 +4,6 @@ import {
   Get,
   UseGuards,
   Body,
-  BadGatewayException,
   Query,
   Param,
   Req,
@@ -305,12 +304,50 @@ export class SupportRequestController {
     status: 403,
     description: "если роль пользователя не подходит",
   })
-  @UseGuards(IsAuthenticatedGuard, IsManager, IsClient)
+  @UseGuards(IsAuthenticatedGuard, IsManagerOrClient)
   @Post("common/support-requests/:id/messages/read")
   async readMessages(
     @Body() data: IsCreatedMessageRequestDto,
     @Param("id") id: string,
+    @Req() request: Request,
   ): Promise<IsReadMessageResponseDto> {
-    throw new BadGatewayException("Bad gateway error");
+    const user = request.user as User;
+    const client = await this.userService.findByEmail(user.email);
+    const isValidSupportRequest = isValidIdHandler(id);
+    const supportRequest = await this.supportRequestModel.findById(
+      isValidSupportRequest,
+    );
+    if (!supportRequest) {
+      throw new NotFoundException("Такого обращения нет");
+    }
+    if (
+      user.role === UserRoles.Client &&
+      client._id.toString() !== supportRequest.user.toString()
+    ) {
+      throw new ForbiddenException("У вас нет доступа к этому обращению");
+    }
+    try {
+      if (user.role === UserRoles.Manager) {
+        await this.supportEmployeeRequestService.markMessagesAsRead({
+          user: client._id.toString(),
+          supportRequest: isValidSupportRequest,
+          createdBefore: new Date(data.createdBefore),
+        });
+      }
+      if (user.role === UserRoles.Client) {
+        await this.supportClientRequestService.markMessagesAsRead({
+          user: client._id.toString(),
+          supportRequest: isValidSupportRequest,
+          createdBefore: new Date(data.createdBefore),
+        });
+      }
+      return {
+        success: true,
+      };
+    } catch (error) {
+      return {
+        success: false,
+      };
+    }
   }
 }
