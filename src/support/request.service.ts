@@ -49,6 +49,23 @@ export class SupportRequestService implements ISupportRequestService {
   subscribe(
     handler: (supportRequest: SupportRequest, message: Message) => void,
   ): () => void {
-    throw new Error("Method not implemented.");
+    // В этом методе мы будем создавать подписку на новые сообщения в чате
+    // и передавать их обработчику
+
+    const subscription = this.supportRequestModel
+      .watch()
+      .on("change", async (change) => {
+        if (change.operationType === "insert") {
+          const newMessageId =
+            change.fullDocument.messages[
+              change.fullDocument.messages.length - 1
+            ];
+          const newMessage = await this.messageModel.findById(newMessageId);
+          handler(change.fullDocument, newMessage);
+        }
+      });
+
+    // Возвращаем функцию для отмены подписки
+    return () => subscription.close();
   }
 }
