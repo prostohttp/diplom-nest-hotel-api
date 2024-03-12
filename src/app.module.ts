@@ -20,7 +20,7 @@ mongoose.set("toJSON", {
     SupportRequestModule,
     AuthModule,
     ConfigModule.forRoot(),
-    MongooseModule.forRoot(process.env.MONGO_URL_LOCAL),
+    MongooseModule.forRoot(process.env.MONGO_URL_DOCKER),
   ],
   controllers: [],
   providers: [],
