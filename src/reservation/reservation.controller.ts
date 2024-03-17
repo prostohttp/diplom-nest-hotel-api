@@ -263,6 +263,7 @@ export class ReservationController {
   async removeManagerReservationsForClient(
     @Param("id", ParseMongoIdPipe) id: string,
   ): Promise<void> {
+    //TODO в боевом проекте я бы здесь добавил проверку на удаление юзером, что юзер удаляет свою резервацию, и не может удалить чужую.
     try {
       const reservation = await this.ReservationModel.findById(id);
       if (!reservation) {

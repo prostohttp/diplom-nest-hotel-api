@@ -18,7 +18,12 @@ export class User {
   @Prop({ required: false, unique: false })
   contactPhone: string;
 
-  @Prop({ required: true, unique: false, default: UserRoles.Client })
+  @Prop({
+    required: true,
+    unique: false,
+    default: UserRoles.Client,
+    type: String,
+  })
   role: UserRoles;
 }
 
