@@ -3,6 +3,7 @@ import {
   Body,
   Controller,
   Get,
+  NotFoundException,
   Param,
   Post,
   Put,
@@ -19,6 +20,7 @@ import { SearchHotelParamsDto } from "./dto/search-hotel-params.dto";
 import { IsAuthenticatedGuard } from "src/guards/is-authenticated.guard";
 import { IsAdmin } from "src/guards/is-admin.guard";
 import { AddHotelResponseDto } from "./dto/add-hotel-response.dto";
+import { ParseMongoIdPipe } from "src/pipes/parse-mongo-id.pipe";
 
 @ApiTags("API Модуля «Гостиницы»")
 @Controller()
@@ -100,11 +102,14 @@ export class HotelController {
   @UseGuards(IsAuthenticatedGuard, IsAdmin)
   @Put("admin/hotels/:id")
   async changeHotel(
-    @Param("id") id: string,
+    @Param("id", ParseMongoIdPipe) id: string,
     @Body() data: UpdateHotelParamsDto,
   ): Promise<AddHotelResponseDto> {
     try {
       const hotel = await this.hotelService.update(id, data);
+      if (!hotel) {
+        throw new NotFoundException("Гостиница не найдена");
+      }
       return {
         id: hotel._id.toString(),
         title: hotel.title,

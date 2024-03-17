@@ -18,6 +18,7 @@ import { IsNotAuthenticatedGuard } from "src/guards/is-not-authenticated.guard";
 import { ApiTags, ApiOperation, ApiBody, ApiResponse } from "@nestjs/swagger";
 import { UserSignInResponseDto } from "./dto/user-sign-in-response.dto";
 import { UserSignUpResponseDto } from "./dto/user-sign-up-response.dto";
+import { User } from "src/user/entities/user.entity";
 
 @ApiTags("API Модуля «Аутентификация и авторизация»")
 @Controller()
@@ -53,7 +54,7 @@ export class AuthController {
   @Post("auth/login")
   async login(@Req() req: Request): Promise<UserSignInResponseDto> {
     try {
-      const user = await this.authService.login(req);
+      const user: User = await this.authService.login(req);
       return {
         email: user.email,
         name: user.name,

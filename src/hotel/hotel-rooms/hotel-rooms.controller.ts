@@ -45,6 +45,7 @@ import { Request } from "express";
 import { UserRoles } from "src/types/user-roles";
 import { User } from "src/user/entities/user.entity";
 import { RoomInfoResponseDto } from "../dto/room-info-response.dto";
+import { ParseMongoIdPipe } from "src/pipes/parse-mongo-id.pipe";
 
 @ApiTags("API Модуля «Гостиницы»")
 @Controller()
@@ -193,10 +194,11 @@ export class HotelRoomsController {
   })
   @ApiNotFoundResponse({ description: "Номер не найден" })
   @Get("common/hotel-rooms/:id")
-  async getHotelRoom(@Param("id") id: string): Promise<RoomInfoResponseDto> {
-    const isValidId = isValidIdHandler(id);
+  async getHotelRoom(
+    @Param("id", ParseMongoIdPipe) id: string,
+  ): Promise<RoomInfoResponseDto> {
     try {
-      const hotelRoom = await this.hotelRoomsService.findById(isValidId);
+      const hotelRoom = await this.hotelRoomsService.findById(id);
       if (hotelRoom) {
         const hotel = await this.hotelService.findById(hotelRoom.hotel);
         return {
@@ -262,7 +264,7 @@ export class HotelRoomsController {
   )
   @Put("admin/hotel-rooms/:id")
   async changeHotelRoom(
-    @Param("id") id: string,
+    @Param("id", ParseMongoIdPipe) id: string,
     @Body() data: UpdateHotelRoomParamsDto,
     @UploadedFiles(
       new ParseFilePipe({
@@ -273,7 +275,8 @@ export class HotelRoomsController {
     multerImagesArray: Express.Multer.File[],
   ): Promise<AddRoomResponseDto> {
     try {
-      const hotel = await this.hotelService.findById(data.hotelId);
+      const validHotelId = isValidIdHandler(data.hotelId);
+      const hotel = await this.hotelService.findById(validHotelId);
       const hotelRoom = await this.hotelRoomsService.findById(id);
       const images = multerImagesArray.map((file) => file.path);
 

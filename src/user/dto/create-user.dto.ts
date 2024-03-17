@@ -20,7 +20,7 @@ export class CreateUserDto {
 
   @ApiProperty({ default: "123456" })
   @IsNotEmpty({ message: 'Поле "password" не должно быть пустым' })
-  @MinLength(5, { message: "Пароль должен быть не менее 5 символов" })
+  @MinLength(6, { message: "Пароль должен быть не менее 6 символов" })
   password: string;
 
   @ApiProperty({ default: "test" })

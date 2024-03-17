@@ -26,6 +26,7 @@ import { User } from "src/user/entities/user.entity";
 import { isValidIdHandler } from "src/utils";
 import { IsManager } from "src/guards/is-manager.guard";
 import { AddReservationResponseDto } from "./dto/add-reservation-response.dto";
+import { ParseMongoIdPipe } from "src/pipes/parse-mongo-id.pipe";
 
 @ApiTags("API Модуля «Бронирование»")
 @Controller()
@@ -186,16 +187,14 @@ export class ReservationController {
   @UseGuards(IsAuthenticatedGuard, IsClient)
   @Delete("client/reservations/:id")
   async removeClientReservations(
-    @Param("id") id: string,
+    @Param("id", ParseMongoIdPipe) id: string,
     @Req() request: Request,
   ): Promise<void> {
     try {
-      const isValidReservationId = isValidIdHandler(id);
       const client = request.user as User;
       const user = await this.UserModel.findOne({ email: client.email });
       const userId = user._id.toString();
-      const roomReservation =
-        await this.ReservationModel.findById(isValidReservationId);
+      const roomReservation = await this.ReservationModel.findById(id);
       if (!roomReservation) {
         throw new BadRequestException("Бронь не найдена");
       }
@@ -206,7 +205,7 @@ export class ReservationController {
         );
       }
 
-      this.reservationService.removeReservation(isValidReservationId);
+      this.reservationService.removeReservation(id);
     } catch (error) {
       throw new BadRequestException(error.message);
     }
@@ -228,12 +227,11 @@ export class ReservationController {
   @UseGuards(IsAuthenticatedGuard, IsManager)
   @Get("manager/reservations/:userId")
   async getManagerReservationsForClient(
-    @Param("userId") userId: string,
+    @Param("userId", ParseMongoIdPipe) userId: string,
   ): Promise<AddReservationResponseDto[]> {
     try {
-      const isValidUserId = isValidIdHandler(userId);
       const reservations = await this.ReservationModel.find({
-        userId: isValidUserId,
+        userId,
       });
       return this.reservationsHandler(reservations);
     } catch (error) {
@@ -263,12 +261,10 @@ export class ReservationController {
   @UseGuards(IsAuthenticatedGuard, IsManager)
   @Delete("manager/reservations/:id")
   async removeManagerReservationsForClient(
-    @Param("id") id: string,
+    @Param("id", ParseMongoIdPipe) id: string,
   ): Promise<void> {
     try {
-      const validReservationId = isValidIdHandler(id);
-      const reservation =
-        await this.ReservationModel.findById(validReservationId);
+      const reservation = await this.ReservationModel.findById(id);
       if (!reservation) {
         throw new BadRequestException("Бронь не найдена");
       }
