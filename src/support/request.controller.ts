@@ -30,9 +30,9 @@ import { UserService } from "src/user/user.service";
 import { SupportRequest } from "./entities/support-request.entity";
 import { Model } from "mongoose";
 import { InjectModel } from "@nestjs/mongoose";
-import { isValidIdHandler } from "src/utils";
 import { UserRoles } from "src/types/user-roles";
 import { IsManagerOrClient } from "src/guards/is-manager-or-client.guard";
+import { ParseMongoIdPipe } from "src/pipes/parse-mongo-id.pipe";
 
 @ApiTags("API модуля «Чат с техподдержкой»")
 @Controller()
@@ -213,16 +213,13 @@ export class SupportRequestController {
   @UseGuards(IsAuthenticatedGuard, IsManagerOrClient)
   @Get("common/support-requests/:id/messages")
   async getHistory(
-    @Param("id") id: string,
+    @Param("id", ParseMongoIdPipe) id: string,
     @Req() request: Request,
   ): Promise<HistoryMessageResponseDto[]> {
     try {
       const user = request.user as User;
       const client = await this.userService.findByEmail(user.email);
-      const isValidSupportRequest = isValidIdHandler(id);
-      const supportRequest = await this.supportRequestModel.findById(
-        isValidSupportRequest,
-      );
+      const supportRequest = await this.supportRequestModel.findById(id);
       if (!supportRequest) {
         throw new NotFoundException("Такого обращения нет");
       }
@@ -271,16 +268,13 @@ export class SupportRequestController {
   @Post("common/support-requests/:id/messages")
   async sendMessage(
     @Body() data: CreateMessageDto,
-    @Param("id") id: string,
+    @Param("id", ParseMongoIdPipe) id: string,
     @Req() request: Request,
   ): Promise<HistoryMessageResponseDto[]> {
     try {
       const user = request.user as User;
       const client = await this.userService.findByEmail(user.email);
-      const isValidSupportRequest = isValidIdHandler(id);
-      const supportRequest = await this.supportRequestModel.findById(
-        isValidSupportRequest,
-      );
+      const supportRequest = await this.supportRequestModel.findById(id);
       if (!supportRequest) {
         throw new NotFoundException("Такого обращения нет");
       }
@@ -292,7 +286,7 @@ export class SupportRequestController {
       }
       const message = await this.supportRequestService.sendMessage({
         author: client._id.toString(),
-        supportRequest: isValidSupportRequest,
+        supportRequest: id,
         text: data.text,
       });
 
@@ -330,16 +324,13 @@ export class SupportRequestController {
   @Post("common/support-requests/:id/messages/read")
   async readMessages(
     @Body() data: IsCreatedMessageRequestDto,
-    @Param("id") id: string,
+    @Param("id", ParseMongoIdPipe) id: string,
     @Req() request: Request,
   ): Promise<IsReadMessageResponseDto> {
     try {
       const user = request.user as User;
       const client = await this.userService.findByEmail(user.email);
-      const isValidSupportRequest = isValidIdHandler(id);
-      const supportRequest = await this.supportRequestModel.findById(
-        isValidSupportRequest,
-      );
+      const supportRequest = await this.supportRequestModel.findById(id);
       if (!supportRequest) {
         throw new NotFoundException("Такого обращения нет");
       }
@@ -353,14 +344,14 @@ export class SupportRequestController {
       if (user.role === UserRoles.Manager) {
         await this.supportEmployeeRequestService.markMessagesAsRead({
           user: client._id.toString(),
-          supportRequest: isValidSupportRequest,
+          supportRequest: id,
           createdBefore: new Date(data.createdBefore),
         });
       }
       if (user.role === UserRoles.Client) {
         await this.supportClientRequestService.markMessagesAsRead({
           user: client._id.toString(),
-          supportRequest: isValidSupportRequest,
+          supportRequest: id,
           createdBefore: new Date(data.createdBefore),
         });
       }
