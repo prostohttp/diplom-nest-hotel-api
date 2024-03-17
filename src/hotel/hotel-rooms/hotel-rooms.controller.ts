@@ -39,7 +39,6 @@ import { IsAdmin } from "src/guards/is-admin.guard";
 import { IsAuthenticatedGuard } from "src/guards/is-authenticated.guard";
 import { AddRoomResponseDto } from "../dto/add-room-response.dto";
 import { SearchRoomResponseDto } from "../dto/search-room-response.dto";
-import { isValidIdHandler } from "src/utils";
 import { SearchRoomsParamsDto } from "../dto/search-rooms-params.dto";
 import { Request } from "express";
 import { UserRoles } from "src/types/user-roles";
@@ -156,17 +155,16 @@ export class HotelRoomsController {
     @Req() request: Request,
   ): Promise<SearchRoomResponseDto[]> {
     const { limit, offset, hotel, isEnabled = undefined } = params;
-    const isValidHotelId = isValidIdHandler(hotel);
     const user = request.user as User;
     try {
-      const searchedHotel = await this.hotelService.findById(isValidHotelId);
+      const searchedHotel = await this.hotelService.findById(hotel);
       if (!searchedHotel) {
         throw new NotFoundException("Гостиница не найдена");
       }
       const searchedRooms = await this.hotelRoomsService.search({
         limit,
         offset,
-        hotel: isValidHotelId,
+        hotel,
         isEnabled: !user || user.role === UserRoles.Client ? true : isEnabled,
       });
       return searchedRooms.map((room) => ({
@@ -275,8 +273,7 @@ export class HotelRoomsController {
     multerImagesArray: Express.Multer.File[],
   ): Promise<AddRoomResponseDto> {
     try {
-      const validHotelId = isValidIdHandler(data.hotelId);
-      const hotel = await this.hotelService.findById(validHotelId);
+      const hotel = await this.hotelService.findById(data.hotelId);
       const hotelRoom = await this.hotelRoomsService.findById(id);
       const images = multerImagesArray.map((file) => file.path);
 

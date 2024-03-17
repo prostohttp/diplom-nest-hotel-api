@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from "@nestjs/common";
+import { ConflictException, Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { Model } from "mongoose";
 import * as bcrypt from "bcrypt";
@@ -14,15 +14,14 @@ export class UserService implements IUserService {
   constructor(@InjectModel(User.name) private userModel: Model<User>) {}
 
   async create(data: CreateUserDto): Promise<UserDocument> {
-    //TODOЗдесь не хватает дополнительной проверки и возврат типизированной ошибки про то что - Пользователь с таким email уже зарегистрирован
-    try {
-      const hash = await bcrypt.hash(data.password, 10);
-      const user = new this.userModel({ ...data, passwordHash: hash });
-      if (user) {
-        return user.save();
-      }
-    } catch (error) {
-      throw new BadRequestException(error.message);
+    const hash = await bcrypt.hash(data.password, 10);
+    const user = new this.userModel({ ...data, passwordHash: hash });
+    if (user) {
+      return user.save();
+    } else {
+      throw new ConflictException(
+        "Пользователь с таким email уже зарегистрирован",
+      );
     }
   }
 

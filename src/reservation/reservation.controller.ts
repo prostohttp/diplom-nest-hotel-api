@@ -23,7 +23,6 @@ import { Hotel } from "src/hotel/entities/hotel.entity";
 import { HotelRoom } from "src/hotel/entities/hotel-room.entity";
 import { Model } from "mongoose";
 import { User } from "src/user/entities/user.entity";
-import { isValidIdHandler } from "src/utils";
 import { IsManager } from "src/guards/is-manager.guard";
 import { AddReservationResponseDto } from "./dto/add-reservation-response.dto";
 import { ParseMongoIdPipe } from "src/pipes/parse-mongo-id.pipe";
@@ -86,10 +85,9 @@ export class ReservationController {
   ): Promise<AddReservationResponseDto> {
     try {
       const { hotelRoom, startDate, endDate } = reservationDto;
-      const validHotelRoomId = isValidIdHandler(hotelRoom);
       const client = request.user as User;
       const user = await this.UserModel.findOne({ email: client.email });
-      const room = await this.HotelRoomModel.findOne({ _id: validHotelRoomId });
+      const room = await this.HotelRoomModel.findOne({ _id: hotelRoom });
       if (!room) {
         throw new BadRequestException("Такой номер не найден");
       }
@@ -263,7 +261,6 @@ export class ReservationController {
   async removeManagerReservationsForClient(
     @Param("id", ParseMongoIdPipe) id: string,
   ): Promise<void> {
-    //TODO в боевом проекте я бы здесь добавил проверку на удаление юзером, что юзер удаляет свою резервацию, и не может удалить чужую.
     try {
       const reservation = await this.ReservationModel.findById(id);
       if (!reservation) {

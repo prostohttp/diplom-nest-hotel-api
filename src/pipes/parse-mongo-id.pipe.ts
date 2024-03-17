@@ -1,9 +1,13 @@
-import { Injectable, PipeTransform } from "@nestjs/common";
-import { isValidIdHandler } from "src/utils";
+import { BadRequestException, Injectable, PipeTransform } from "@nestjs/common";
+import mongoose from "mongoose";
 
 @Injectable()
 export class ParseMongoIdPipe implements PipeTransform {
   transform(value: any) {
-    return isValidIdHandler(value);
+    const isValidId = mongoose.Types.ObjectId.isValid(value);
+    if (!isValidId) {
+      throw new BadRequestException("Неправильный формат ID");
+    }
+    return value;
   }
 }

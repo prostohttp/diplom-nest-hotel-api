@@ -5,6 +5,7 @@ import { HotelRoomsController } from "./hotel-rooms.controller";
 import { HotelRoom, HotelRoomSchema } from "../entities/hotel-room.entity";
 import { Hotel, HotelSchema } from "../entities/hotel.entity";
 import { HotelService } from "../hotel.service";
+import { IsValidMongoIdConstraint } from "src/validators/is-valid-mongo-id.validator";
 
 @Module({
   imports: [
@@ -14,6 +15,6 @@ import { HotelService } from "../hotel.service";
     ]),
   ],
   controllers: [HotelRoomsController],
-  providers: [HotelRoomsService, HotelService],
+  providers: [HotelRoomsService, HotelService, IsValidMongoIdConstraint],
 })
 export class HotelRoomsModule {}

@@ -6,7 +6,7 @@ import {
   IsEnum,
   MinLength,
 } from "class-validator";
-import { IsUniqueEmail } from "../validators/is-unique-email.validator";
+import { IsUniqueEmail } from "../../validators/is-unique-email.validator";
 
 import { ApiProperty } from "@nestjs/swagger";
 import { UserRoles } from "src/types/user-roles";

@@ -7,7 +7,7 @@ import {
 } from "class-validator";
 
 import { ApiProperty } from "@nestjs/swagger";
-import { IsUniqueEmail } from "src/user/validators/is-unique-email.validator";
+import { IsUniqueEmail } from "src/validators/is-unique-email.validator";
 
 export class SignUpDto {
   @ApiProperty({ default: "test@site.ru" })

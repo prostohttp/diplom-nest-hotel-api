@@ -22,8 +22,8 @@ import { UserRoles } from "src/types/user-roles";
 import { InjectModel } from "@nestjs/mongoose";
 import { SupportRequest } from "./entities/support-request.entity";
 import { Model } from "mongoose";
-import { isValidIdHandler } from "src/utils";
 import { Message } from "./entities/message.entity";
+import { ParseMongoIdPipe } from "src/pipes/parse-mongo-id.pipe";
 
 @WebSocketGateway()
 export class SupportGateway {
@@ -40,16 +40,13 @@ export class SupportGateway {
   @UseGuards(IsAuthenticatedGuard, IsManagerOrClient)
   @SubscribeMessage("subscribeToChat")
   async handleSubscribeToChat(
-    @MessageBody() chatId: string,
+    @MessageBody("chatId", ParseMongoIdPipe) chatId: string,
     @Req() request: Request,
   ) {
     try {
       const user = request.user as User;
       const client = await this.userService.findByEmail(user.email);
-      const isValidSupportRequest = isValidIdHandler(chatId);
-      const supportRequest = await this.supportRequestModel.findById(
-        isValidSupportRequest,
-      );
+      const supportRequest = await this.supportRequestModel.findById(chatId);
       if (!supportRequest) {
         throw new NotFoundException("Такого обращения нет");
       }
