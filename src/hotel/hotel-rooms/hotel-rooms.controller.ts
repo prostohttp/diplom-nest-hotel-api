@@ -40,7 +40,6 @@ import { AddRoomResponseDto } from "../dto/add-room-response.dto";
 import { SearchRoomResponseDto } from "../dto/search-room-response.dto";
 import { SearchRoomsParamsDto } from "../dto/search-rooms-params.dto";
 import { UserRoles } from "src/types/user-roles";
-import { User } from "src/user/entities/user.entity";
 import { RoomInfoResponseDto } from "../dto/room-info-response.dto";
 import { ParseMongoIdPipe } from "src/pipes/parse-mongo-id.pipe";
 import { LoggedUser } from "src/decorators/user.decorator";
@@ -151,7 +150,7 @@ export class HotelRoomsController {
   @Get("common/hotel-rooms")
   async getHotelRooms(
     @Query() params: SearchRoomsParamsDto,
-    @LoggedUser() user: User,
+    @LoggedUser("role") role: string,
   ): Promise<SearchRoomResponseDto[]> {
     const { limit, offset, hotel, isEnabled = undefined } = params;
     try {
@@ -163,7 +162,7 @@ export class HotelRoomsController {
         limit,
         offset,
         hotel,
-        isEnabled: !user || user.role === UserRoles.Client ? true : isEnabled,
+        isEnabled: !role || role === UserRoles.Client ? true : isEnabled,
       });
       return searchedRooms.map((room) => ({
         id: room._id.toString(),

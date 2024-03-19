@@ -14,7 +14,6 @@ import {
   NotFoundException,
   UseGuards,
 } from "@nestjs/common";
-import { User } from "src/user/entities/user.entity";
 import { UserService } from "src/user/user.service";
 import { UserRoles } from "src/types/user-roles";
 import { InjectModel } from "@nestjs/mongoose";
@@ -40,16 +39,17 @@ export class SupportGateway {
   @SubscribeMessage("subscribeToChat")
   async handleSubscribeToChat(
     @MessageBody("chatId", ParseMongoIdPipe) chatId: string,
-    @LoggedUser() user: User,
+    @LoggedUser("email") email: string,
+    @LoggedUser("role") role: string,
   ) {
     try {
-      const client = await this.userService.findByEmail(user.email);
+      const client = await this.userService.findByEmail(email);
       const supportRequest = await this.supportRequestModel.findById(chatId);
       if (!supportRequest) {
         throw new NotFoundException("Такого обращения нет");
       }
       if (
-        user.role === UserRoles.Client &&
+        role === UserRoles.Client &&
         client._id.toString() !== supportRequest.user.toString()
       ) {
         throw new ForbiddenException("У вас нет доступа к этому обращению");

@@ -80,11 +80,11 @@ export class ReservationController {
   @Post("client/reservations")
   async addClientReservations(
     @Body() reservationDto: ReservationDto,
-    @LoggedUser() loggedUser: User,
+    @LoggedUser("email") email: string,
   ): Promise<AddReservationResponseDto> {
     try {
       const { hotelRoom, startDate, endDate } = reservationDto;
-      const user = await this.UserModel.findOne({ email: loggedUser.email });
+      const user = await this.UserModel.findOne({ email });
       const room = await this.HotelRoomModel.findOne({ _id: hotelRoom });
       if (!room) {
         throw new BadRequestException("Такой номер не найден");

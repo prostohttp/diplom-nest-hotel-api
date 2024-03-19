@@ -23,7 +23,6 @@ import { MessageResponseDto } from "./dto/message-response.dto";
 import { HistoryMessageResponseDto } from "./dto/history-message-response.dto";
 import { IsReadMessageResponseDto } from "./dto/is-read-message-response.dto";
 import { IsCreatedMessageRequestDto } from "./dto/is-created-message-request.dto";
-import { User } from "src/user/entities/user.entity";
 import { UserService } from "src/user/user.service";
 import { SupportRequest } from "./entities/support-request.entity";
 import { Model } from "mongoose";
@@ -62,10 +61,10 @@ export class SupportRequestController {
   @Post("client/support-requests/")
   async createMessage(
     @Body() data: CreateMessageDto,
-    @LoggedUser() loggedUser: User,
+    @LoggedUser("email") email: string,
   ): Promise<CreateMessageRequestDto[]> {
     try {
-      const user = await this.userService.findByEmail(loggedUser.email);
+      const user = await this.userService.findByEmail(email);
       const supportRequest =
         await this.supportClientRequestService.createSupportRequest({
           user: user._id.toString(),
@@ -100,13 +99,13 @@ export class SupportRequestController {
   @UseGuards(IsAuthenticatedGuard, IsClient)
   @Get("client/support-requests/")
   async getSupportRequests(
-    @LoggedUser() loggedUser: User,
+    @LoggedUser("email") email: string,
     @Query("limit") limit: string,
     @Query("offset") offset: string,
     @Query("isActive") isActive: boolean,
   ): Promise<CreateMessageRequestDto[]> {
     try {
-      const user = await this.userService.findByEmail(loggedUser.email);
+      const user = await this.userService.findByEmail(email);
       const userId = user._id.toString();
 
       const parsedLimit = limit ? parseInt(limit, 10) : null;
@@ -211,16 +210,17 @@ export class SupportRequestController {
   @Get("common/support-requests/:id/messages")
   async getHistory(
     @Param("id", ParseMongoIdPipe) id: string,
-    @LoggedUser() loggedUser: User,
+    @LoggedUser("email") email: string,
+    @LoggedUser("role") role: string,
   ): Promise<HistoryMessageResponseDto[]> {
     try {
-      const client = await this.userService.findByEmail(loggedUser.email);
+      const client = await this.userService.findByEmail(email);
       const supportRequest = await this.supportRequestModel.findById(id);
       if (!supportRequest) {
         throw new NotFoundException("Такого обращения нет");
       }
       if (
-        loggedUser.role === UserRoles.Client &&
+        role === UserRoles.Client &&
         client._id.toString() !== supportRequest.user.toString()
       ) {
         throw new ForbiddenException("У вас нет доступа к этому обращению");
@@ -265,16 +265,17 @@ export class SupportRequestController {
   async sendMessage(
     @Body() data: CreateMessageDto,
     @Param("id", ParseMongoIdPipe) id: string,
-    @LoggedUser() loggedUser: User,
+    @LoggedUser("email") email: string,
+    @LoggedUser("role") role: string,
   ): Promise<HistoryMessageResponseDto[]> {
     try {
-      const client = await this.userService.findByEmail(loggedUser.email);
+      const client = await this.userService.findByEmail(email);
       const supportRequest = await this.supportRequestModel.findById(id);
       if (!supportRequest) {
         throw new NotFoundException("Такого обращения нет");
       }
       if (
-        loggedUser.role === UserRoles.Client &&
+        role === UserRoles.Client &&
         client._id.toString() !== supportRequest.user.toString()
       ) {
         throw new ForbiddenException("У вас нет доступа к этому обращению");
@@ -320,29 +321,30 @@ export class SupportRequestController {
   async readMessages(
     @Body() data: IsCreatedMessageRequestDto,
     @Param("id", ParseMongoIdPipe) id: string,
-    @LoggedUser() loggedUser: User,
+    @LoggedUser("email") email: string,
+    @LoggedUser("role") role: string,
   ): Promise<IsReadMessageResponseDto> {
     try {
-      const client = await this.userService.findByEmail(loggedUser.email);
+      const client = await this.userService.findByEmail(email);
       const supportRequest = await this.supportRequestModel.findById(id);
       if (!supportRequest) {
         throw new NotFoundException("Такого обращения нет");
       }
       if (
-        loggedUser.role === UserRoles.Client &&
+        role === UserRoles.Client &&
         client._id.toString() !== supportRequest.user.toString()
       ) {
         throw new ForbiddenException("У вас нет доступа к этому обращению");
       }
 
-      if (loggedUser.role === UserRoles.Manager) {
+      if (role === UserRoles.Manager) {
         await this.supportEmployeeRequestService.markMessagesAsRead({
           user: client._id.toString(),
           supportRequest: id,
           createdBefore: new Date(data.createdBefore),
         });
       }
-      if (loggedUser.role === UserRoles.Client) {
+      if (role === UserRoles.Client) {
         await this.supportClientRequestService.markMessagesAsRead({
           user: client._id.toString(),
           supportRequest: id,
