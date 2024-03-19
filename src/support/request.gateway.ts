@@ -12,10 +12,8 @@ import {
   BadGatewayException,
   ForbiddenException,
   NotFoundException,
-  Req,
   UseGuards,
 } from "@nestjs/common";
-import { Request } from "express";
 import { User } from "src/user/entities/user.entity";
 import { UserService } from "src/user/user.service";
 import { UserRoles } from "src/types/user-roles";
@@ -24,6 +22,7 @@ import { SupportRequest } from "./entities/support-request.entity";
 import { Model } from "mongoose";
 import { Message } from "./entities/message.entity";
 import { ParseMongoIdPipe } from "src/pipes/parse-mongo-id.pipe";
+import { LoggedUser } from "src/decorators/user.decorator";
 
 @WebSocketGateway()
 export class SupportGateway {
@@ -41,10 +40,9 @@ export class SupportGateway {
   @SubscribeMessage("subscribeToChat")
   async handleSubscribeToChat(
     @MessageBody("chatId", ParseMongoIdPipe) chatId: string,
-    @Req() request: Request,
+    @LoggedUser() user: User,
   ) {
     try {
-      const user = request.user as User;
       const client = await this.userService.findByEmail(user.email);
       const supportRequest = await this.supportRequestModel.findById(chatId);
       if (!supportRequest) {

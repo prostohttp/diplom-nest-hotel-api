@@ -5,7 +5,6 @@ import {
   Body,
   Post,
   BadRequestException,
-  Req,
   UseGuards,
   Query,
   Param,
@@ -14,7 +13,6 @@ import {
 import { ReservationService } from "./reservation.service";
 import { ReservationDto } from "./dto/reservation.dto";
 import { ApiOperation, ApiQuery, ApiResponse, ApiTags } from "@nestjs/swagger";
-import { Request } from "express";
 import { IsAuthenticatedGuard } from "src/guards/is-authenticated.guard";
 import { IsClient } from "src/guards/is-client.guard";
 import { InjectModel } from "@nestjs/mongoose";
@@ -26,6 +24,7 @@ import { User } from "src/user/entities/user.entity";
 import { IsManager } from "src/guards/is-manager.guard";
 import { AddReservationResponseDto } from "./dto/add-reservation-response.dto";
 import { ParseMongoIdPipe } from "src/pipes/parse-mongo-id.pipe";
+import { LoggedUser } from "src/decorators/user.decorator";
 
 @ApiTags("API Модуля «Бронирование»")
 @Controller()
@@ -81,12 +80,11 @@ export class ReservationController {
   @Post("client/reservations")
   async addClientReservations(
     @Body() reservationDto: ReservationDto,
-    @Req() request: Request,
+    @LoggedUser() loggedUser: User,
   ): Promise<AddReservationResponseDto> {
     try {
       const { hotelRoom, startDate, endDate } = reservationDto;
-      const client = request.user as User;
-      const user = await this.UserModel.findOne({ email: client.email });
+      const user = await this.UserModel.findOne({ email: loggedUser.email });
       const room = await this.HotelRoomModel.findOne({ _id: hotelRoom });
       if (!room) {
         throw new BadRequestException("Такой номер не найден");
@@ -141,13 +139,12 @@ export class ReservationController {
   @UseGuards(IsAuthenticatedGuard, IsClient)
   @Get("client/reservations")
   async getClientReservations(
-    @Req() request: Request,
+    @LoggedUser() loggedUser: User,
     @Query("dateStart") dateStart: string,
     @Query("dateEnd") dateEnd: string,
   ): Promise<AddReservationResponseDto[]> {
     try {
-      const client = request.user as User;
-      const user = await this.UserModel.findOne({ email: client.email });
+      const user = await this.UserModel.findOne({ email: loggedUser.email });
       const reservations = await this.reservationService.getReservations({
         userId: user._id.toString(),
         dateStart: new Date(dateStart),
@@ -186,11 +183,10 @@ export class ReservationController {
   @Delete("client/reservations/:id")
   async removeClientReservations(
     @Param("id", ParseMongoIdPipe) id: string,
-    @Req() request: Request,
+    @LoggedUser() loggedUser: User,
   ): Promise<void> {
     try {
-      const client = request.user as User;
-      const user = await this.UserModel.findOne({ email: client.email });
+      const user = await this.UserModel.findOne({ email: loggedUser.email });
       const userId = user._id.toString();
       const roomReservation = await this.ReservationModel.findById(id);
       if (!roomReservation) {

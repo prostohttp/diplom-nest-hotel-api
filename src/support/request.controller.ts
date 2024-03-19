@@ -6,7 +6,6 @@ import {
   Body,
   Query,
   Param,
-  Req,
   NotFoundException,
   ForbiddenException,
   BadRequestException,
@@ -24,7 +23,6 @@ import { MessageResponseDto } from "./dto/message-response.dto";
 import { HistoryMessageResponseDto } from "./dto/history-message-response.dto";
 import { IsReadMessageResponseDto } from "./dto/is-read-message-response.dto";
 import { IsCreatedMessageRequestDto } from "./dto/is-created-message-request.dto";
-import { Request } from "express";
 import { User } from "src/user/entities/user.entity";
 import { UserService } from "src/user/user.service";
 import { SupportRequest } from "./entities/support-request.entity";
@@ -33,6 +31,7 @@ import { InjectModel } from "@nestjs/mongoose";
 import { UserRoles } from "src/types/user-roles";
 import { IsManagerOrClient } from "src/guards/is-manager-or-client.guard";
 import { ParseMongoIdPipe } from "src/pipes/parse-mongo-id.pipe";
+import { LoggedUser } from "src/decorators/user.decorator";
 
 @ApiTags("API модуля «Чат с техподдержкой»")
 @Controller()
@@ -63,11 +62,10 @@ export class SupportRequestController {
   @Post("client/support-requests/")
   async createMessage(
     @Body() data: CreateMessageDto,
-    @Req() request: Request,
+    @LoggedUser() loggedUser: User,
   ): Promise<CreateMessageRequestDto[]> {
     try {
-      const client = request.user as User;
-      const user = await this.userService.findByEmail(client.email);
+      const user = await this.userService.findByEmail(loggedUser.email);
       const supportRequest =
         await this.supportClientRequestService.createSupportRequest({
           user: user._id.toString(),
@@ -102,14 +100,13 @@ export class SupportRequestController {
   @UseGuards(IsAuthenticatedGuard, IsClient)
   @Get("client/support-requests/")
   async getSupportRequests(
-    @Req() request: Request,
+    @LoggedUser() loggedUser: User,
     @Query("limit") limit: string,
     @Query("offset") offset: string,
     @Query("isActive") isActive: boolean,
   ): Promise<CreateMessageRequestDto[]> {
     try {
-      const client = request.user as User;
-      const user = await this.userService.findByEmail(client.email);
+      const user = await this.userService.findByEmail(loggedUser.email);
       const userId = user._id.toString();
 
       const parsedLimit = limit ? parseInt(limit, 10) : null;
@@ -214,17 +211,16 @@ export class SupportRequestController {
   @Get("common/support-requests/:id/messages")
   async getHistory(
     @Param("id", ParseMongoIdPipe) id: string,
-    @Req() request: Request,
+    @LoggedUser() loggedUser: User,
   ): Promise<HistoryMessageResponseDto[]> {
     try {
-      const user = request.user as User;
-      const client = await this.userService.findByEmail(user.email);
+      const client = await this.userService.findByEmail(loggedUser.email);
       const supportRequest = await this.supportRequestModel.findById(id);
       if (!supportRequest) {
         throw new NotFoundException("Такого обращения нет");
       }
       if (
-        user.role === UserRoles.Client &&
+        loggedUser.role === UserRoles.Client &&
         client._id.toString() !== supportRequest.user.toString()
       ) {
         throw new ForbiddenException("У вас нет доступа к этому обращению");
@@ -269,17 +265,16 @@ export class SupportRequestController {
   async sendMessage(
     @Body() data: CreateMessageDto,
     @Param("id", ParseMongoIdPipe) id: string,
-    @Req() request: Request,
+    @LoggedUser() loggedUser: User,
   ): Promise<HistoryMessageResponseDto[]> {
     try {
-      const user = request.user as User;
-      const client = await this.userService.findByEmail(user.email);
+      const client = await this.userService.findByEmail(loggedUser.email);
       const supportRequest = await this.supportRequestModel.findById(id);
       if (!supportRequest) {
         throw new NotFoundException("Такого обращения нет");
       }
       if (
-        user.role === UserRoles.Client &&
+        loggedUser.role === UserRoles.Client &&
         client._id.toString() !== supportRequest.user.toString()
       ) {
         throw new ForbiddenException("У вас нет доступа к этому обращению");
@@ -325,30 +320,29 @@ export class SupportRequestController {
   async readMessages(
     @Body() data: IsCreatedMessageRequestDto,
     @Param("id", ParseMongoIdPipe) id: string,
-    @Req() request: Request,
+    @LoggedUser() loggedUser: User,
   ): Promise<IsReadMessageResponseDto> {
     try {
-      const user = request.user as User;
-      const client = await this.userService.findByEmail(user.email);
+      const client = await this.userService.findByEmail(loggedUser.email);
       const supportRequest = await this.supportRequestModel.findById(id);
       if (!supportRequest) {
         throw new NotFoundException("Такого обращения нет");
       }
       if (
-        user.role === UserRoles.Client &&
+        loggedUser.role === UserRoles.Client &&
         client._id.toString() !== supportRequest.user.toString()
       ) {
         throw new ForbiddenException("У вас нет доступа к этому обращению");
       }
 
-      if (user.role === UserRoles.Manager) {
+      if (loggedUser.role === UserRoles.Manager) {
         await this.supportEmployeeRequestService.markMessagesAsRead({
           user: client._id.toString(),
           supportRequest: id,
           createdBefore: new Date(data.createdBefore),
         });
       }
-      if (user.role === UserRoles.Client) {
+      if (loggedUser.role === UserRoles.Client) {
         await this.supportClientRequestService.markMessagesAsRead({
           user: client._id.toString(),
           supportRequest: id,

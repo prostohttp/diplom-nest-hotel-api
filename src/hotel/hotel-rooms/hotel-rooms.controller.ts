@@ -11,7 +11,6 @@ import {
   Post,
   Put,
   Query,
-  Req,
   UploadedFiles,
   UseGuards,
   UseInterceptors,
@@ -40,11 +39,11 @@ import { IsAuthenticatedGuard } from "src/guards/is-authenticated.guard";
 import { AddRoomResponseDto } from "../dto/add-room-response.dto";
 import { SearchRoomResponseDto } from "../dto/search-room-response.dto";
 import { SearchRoomsParamsDto } from "../dto/search-rooms-params.dto";
-import { Request } from "express";
 import { UserRoles } from "src/types/user-roles";
 import { User } from "src/user/entities/user.entity";
 import { RoomInfoResponseDto } from "../dto/room-info-response.dto";
 import { ParseMongoIdPipe } from "src/pipes/parse-mongo-id.pipe";
+import { LoggedUser } from "src/decorators/user.decorator";
 
 @ApiTags("API Модуля «Гостиницы»")
 @Controller()
@@ -152,10 +151,9 @@ export class HotelRoomsController {
   @Get("common/hotel-rooms")
   async getHotelRooms(
     @Query() params: SearchRoomsParamsDto,
-    @Req() request: Request,
+    @LoggedUser() user: User,
   ): Promise<SearchRoomResponseDto[]> {
     const { limit, offset, hotel, isEnabled = undefined } = params;
-    const user = request.user as User;
     try {
       const searchedHotel = await this.hotelService.findById(hotel);
       if (!searchedHotel) {
