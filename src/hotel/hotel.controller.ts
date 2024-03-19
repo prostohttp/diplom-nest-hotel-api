@@ -8,7 +8,6 @@ import {
   Post,
   Put,
   Query,
-  UseGuards,
   UsePipes,
   ValidationPipe,
 } from "@nestjs/common";
@@ -17,10 +16,10 @@ import { ApiOperation, ApiParam, ApiResponse, ApiTags } from "@nestjs/swagger";
 import { UpdateHotelParamsDto } from "./dto/update-hotel-params.dto";
 import { AddHotelParamsDto } from "./dto/add-hotel-params.dto";
 import { SearchHotelParamsDto } from "./dto/search-hotel-params.dto";
-import { IsAuthenticatedGuard } from "src/guards/is-authenticated.guard";
-import { IsAdmin } from "src/guards/is-admin.guard";
 import { AddHotelResponseDto } from "./dto/add-hotel-response.dto";
 import { ParseMongoIdPipe } from "src/pipes/parse-mongo-id.pipe";
+import { Auth } from "src/decorators/auth.decorator";
+import { UserRoles } from "src/types/user-roles";
 
 @ApiTags("API Модуля «Гостиницы»")
 @Controller()
@@ -39,7 +38,7 @@ export class HotelController {
     status: 403,
     description: "если роль пользователя не подходит",
   })
-  @UseGuards(IsAuthenticatedGuard, IsAdmin)
+  @Auth(UserRoles.Admin)
   @UsePipes(ValidationPipe)
   @Post("admin/hotels/")
   async addHotels(
@@ -69,7 +68,7 @@ export class HotelController {
     status: 403,
     description: "если роль пользователя не подходит",
   })
-  @UseGuards(IsAuthenticatedGuard, IsAdmin)
+  @Auth(UserRoles.Admin)
   @Get("admin/hotels/")
   async getHotels(
     @Query() params: SearchHotelParamsDto,
@@ -99,7 +98,7 @@ export class HotelController {
     status: 403,
     description: "если роль пользователя не подходит",
   })
-  @UseGuards(IsAuthenticatedGuard, IsAdmin)
+  @Auth(UserRoles.Admin)
   @Put("admin/hotels/:id")
   async changeHotel(
     @Param("id", ParseMongoIdPipe) id: string,

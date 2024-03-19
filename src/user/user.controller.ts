@@ -6,25 +6,23 @@ import {
   ValidationPipe,
   UsePipes,
   Query,
-  UseGuards,
   BadRequestException,
 } from "@nestjs/common";
 import { UserService } from "./user.service";
 import { CreateUserDto } from "./dto/create-user.dto";
 import { SearchUserDto } from "./dto/search-user.dto";
 import { ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
-import { IsAdmin } from "src/guards/is-admin.guard";
-import { IsAuthenticatedGuard } from "src/guards/is-authenticated.guard";
-import { IsManager } from "src/guards/is-manager.guard";
 import { CreateUserResponseDto } from "./dto/create-user-response.dto";
 import { GetUserResponseDto } from "./dto/get-user-response.dto";
+import { Auth } from "src/decorators/auth.decorator";
+import { UserRoles } from "src/types/user-roles";
 
 @ApiTags("API Модуля «Управление пользователями»")
 @Controller()
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
-  @UseGuards(IsAuthenticatedGuard, IsAdmin)
+  @Auth(UserRoles.Admin)
   @ApiOperation({
     summary: "Создание пользователя",
     description:
@@ -67,7 +65,7 @@ export class UserController {
     status: 403,
     description: "если роль пользователя не подходит",
   })
-  @UseGuards(IsAuthenticatedGuard, IsAdmin)
+  @Auth(UserRoles.Admin)
   @Get("admin/users/")
   async getUserForAdmin(
     @Query() params: SearchUserDto,
@@ -97,7 +95,7 @@ export class UserController {
     status: 403,
     description: "если роль пользователя не подходит",
   })
-  @UseGuards(IsAuthenticatedGuard, IsManager)
+  @Auth(UserRoles.Manager)
   @Get("manager/users/")
   async getUserForManager(
     @Query() params: SearchUserDto,

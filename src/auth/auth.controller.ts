@@ -13,12 +13,12 @@ import { Request, Response } from "express";
 import { UserService } from "src/user/user.service";
 import { UserRoles } from "src/types/user-roles";
 import { SignUpDto } from "./dto/user-sign-up.dto";
-import { IsAuthenticatedGuard } from "src/guards/is-authenticated.guard";
 import { IsNotAuthenticatedGuard } from "src/guards/is-not-authenticated.guard";
 import { ApiTags, ApiOperation, ApiBody, ApiResponse } from "@nestjs/swagger";
 import { UserSignInResponseDto } from "./dto/user-sign-in-response.dto";
 import { UserSignUpResponseDto } from "./dto/user-sign-up-response.dto";
 import { User } from "src/user/entities/user.entity";
+import { Auth } from "src/decorators/auth.decorator";
 
 @ApiTags("API Модуля «Аутентификация и авторизация»")
 @Controller()
@@ -70,7 +70,7 @@ export class AuthController {
     description:
       "Завершает сессию пользователя и удаляет Cookies. Доступно только аутентифицированным пользователям.",
   })
-  @UseGuards(IsAuthenticatedGuard)
+  @Auth()
   @Post("auth/logout")
   logout(@Req() request: Request, @Res() response: Response): Promise<any> {
     try {

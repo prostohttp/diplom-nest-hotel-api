@@ -5,7 +5,6 @@ import {
   Body,
   Post,
   BadRequestException,
-  UseGuards,
   Query,
   Param,
   ForbiddenException,
@@ -13,18 +12,17 @@ import {
 import { ReservationService } from "./reservation.service";
 import { ReservationDto } from "./dto/reservation.dto";
 import { ApiOperation, ApiQuery, ApiResponse, ApiTags } from "@nestjs/swagger";
-import { IsAuthenticatedGuard } from "src/guards/is-authenticated.guard";
-import { IsClient } from "src/guards/is-client.guard";
 import { InjectModel } from "@nestjs/mongoose";
 import { Reservation } from "./entities/reservation.entity";
 import { Hotel } from "src/hotel/entities/hotel.entity";
 import { HotelRoom } from "src/hotel/entities/hotel-room.entity";
 import { Model } from "mongoose";
 import { User } from "src/user/entities/user.entity";
-import { IsManager } from "src/guards/is-manager.guard";
 import { AddReservationResponseDto } from "./dto/add-reservation-response.dto";
 import { ParseMongoIdPipe } from "src/pipes/parse-mongo-id.pipe";
 import { LoggedUser } from "src/decorators/user.decorator";
+import { Auth } from "src/decorators/auth.decorator";
+import { UserRoles } from "src/types/user-roles";
 
 @ApiTags("API Модуля «Бронирование»")
 @Controller()
@@ -76,7 +74,7 @@ export class ReservationController {
     status: 400,
     description: "номера с указанным ID не существует или он отключен",
   })
-  @UseGuards(IsAuthenticatedGuard, IsClient)
+  @Auth(UserRoles.Client)
   @Post("client/reservations")
   async addClientReservations(
     @Body() reservationDto: ReservationDto,
@@ -136,7 +134,7 @@ export class ReservationController {
   })
   @ApiQuery({ name: "dateStart", example: "2009-02-29" })
   @ApiQuery({ name: "dateEnd", example: "2009-04-29" })
-  @UseGuards(IsAuthenticatedGuard, IsClient)
+  @Auth(UserRoles.Client)
   @Get("client/reservations")
   async getClientReservations(
     @LoggedUser() loggedUser: User,
@@ -179,7 +177,7 @@ export class ReservationController {
     status: 400,
     description: "если брони с указанным ID не существует",
   })
-  @UseGuards(IsAuthenticatedGuard, IsClient)
+  @Auth(UserRoles.Client)
   @Delete("client/reservations/:id")
   async removeClientReservations(
     @Param("id", ParseMongoIdPipe) id: string,
@@ -218,7 +216,7 @@ export class ReservationController {
     status: 403,
     description: "роль должна быть manager",
   })
-  @UseGuards(IsAuthenticatedGuard, IsManager)
+  @Auth(UserRoles.Manager)
   @Get("manager/reservations/:userId")
   async getManagerReservationsForClient(
     @Param("userId", ParseMongoIdPipe) userId: string,
@@ -252,7 +250,7 @@ export class ReservationController {
     status: 400,
     description: "если брони с указанным ID не существует",
   })
-  @UseGuards(IsAuthenticatedGuard, IsManager)
+  @Auth(UserRoles.Manager)
   @Delete("manager/reservations/:id")
   async removeManagerReservationsForClient(
     @Param("id", ParseMongoIdPipe) id: string,

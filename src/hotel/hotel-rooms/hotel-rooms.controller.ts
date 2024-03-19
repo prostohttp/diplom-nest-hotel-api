@@ -12,7 +12,6 @@ import {
   Put,
   Query,
   UploadedFiles,
-  UseGuards,
   UseInterceptors,
 } from "@nestjs/common";
 import { promises as fs } from "fs";
@@ -34,8 +33,6 @@ import { AddHotelRoomParamsDto } from "../dto/add-hotel-room-params.dto";
 import { HotelService } from "../hotel.service";
 import { storageConfig } from "./config/disk-storage";
 import { UpdateHotelRoomParamsDto } from "../dto/update-hotel-room-params.dto";
-import { IsAdmin } from "src/guards/is-admin.guard";
-import { IsAuthenticatedGuard } from "src/guards/is-authenticated.guard";
 import { AddRoomResponseDto } from "../dto/add-room-response.dto";
 import { SearchRoomResponseDto } from "../dto/search-room-response.dto";
 import { SearchRoomsParamsDto } from "../dto/search-rooms-params.dto";
@@ -43,6 +40,7 @@ import { UserRoles } from "src/types/user-roles";
 import { RoomInfoResponseDto } from "../dto/room-info-response.dto";
 import { ParseMongoIdPipe } from "src/pipes/parse-mongo-id.pipe";
 import { LoggedUser } from "src/decorators/user.decorator";
+import { Auth } from "src/decorators/auth.decorator";
 
 @ApiTags("API Модуля «Гостиницы»")
 @Controller()
@@ -82,7 +80,7 @@ export class HotelRoomsController {
       },
     },
   })
-  @UseGuards(IsAuthenticatedGuard, IsAdmin)
+  @Auth(UserRoles.Admin)
   @UseInterceptors(
     FilesInterceptor("images", 10, {
       storage: storageConfig,
@@ -251,7 +249,7 @@ export class HotelRoomsController {
       },
     },
   })
-  @UseGuards(IsAuthenticatedGuard, IsAdmin)
+  @Auth(UserRoles.Admin)
   @UseInterceptors(
     FilesInterceptor("images", 10, {
       storage: storageConfig,

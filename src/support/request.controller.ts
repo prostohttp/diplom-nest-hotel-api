@@ -2,7 +2,6 @@ import {
   Controller,
   Post,
   Get,
-  UseGuards,
   Body,
   Query,
   Param,
@@ -12,13 +11,10 @@ import {
 } from "@nestjs/common";
 import { SupportRequestService } from "./request.service";
 import { ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
-import { IsClient } from "src/guards/is-client.guard";
-import { IsAuthenticatedGuard } from "src/guards/is-authenticated.guard";
 import { SupportClientService } from "./client/client.service";
 import { SupportEmployeeService } from "./employee/employee.service";
 import { CreateMessageDto } from "./dto/create-message.dto";
 import { CreateMessageRequestDto } from "./dto/create-message-request.dto";
-import { IsManager } from "src/guards/is-manager.guard";
 import { MessageResponseDto } from "./dto/message-response.dto";
 import { HistoryMessageResponseDto } from "./dto/history-message-response.dto";
 import { IsReadMessageResponseDto } from "./dto/is-read-message-response.dto";
@@ -28,9 +24,9 @@ import { SupportRequest } from "./entities/support-request.entity";
 import { Model } from "mongoose";
 import { InjectModel } from "@nestjs/mongoose";
 import { UserRoles } from "src/types/user-roles";
-import { IsManagerOrClient } from "src/guards/is-manager-or-client.guard";
 import { ParseMongoIdPipe } from "src/pipes/parse-mongo-id.pipe";
 import { LoggedUser } from "src/decorators/user.decorator";
+import { Auth } from "src/decorators/auth.decorator";
 
 @ApiTags("API модуля «Чат с техподдержкой»")
 @Controller()
@@ -57,7 +53,7 @@ export class SupportRequestController {
     status: 403,
     description: "если роль пользователя не подходит",
   })
-  @UseGuards(IsAuthenticatedGuard, IsClient)
+  @Auth(UserRoles.Client)
   @Post("client/support-requests/")
   async createMessage(
     @Body() data: CreateMessageDto,
@@ -96,7 +92,7 @@ export class SupportRequestController {
     status: 403,
     description: "если роль пользователя не подходит",
   })
-  @UseGuards(IsAuthenticatedGuard, IsClient)
+  @Auth(UserRoles.Client)
   @Get("client/support-requests/")
   async getSupportRequests(
     @LoggedUser("email") email: string,
@@ -156,7 +152,7 @@ export class SupportRequestController {
     status: 403,
     description: "если роль пользователя не подходит",
   })
-  @UseGuards(IsAuthenticatedGuard, IsManager)
+  @Auth(UserRoles.Manager)
   @Get("manager/support-requests/")
   async getSupportRequestsForManager(
     @Query("limit") limit: number,
@@ -206,7 +202,7 @@ export class SupportRequestController {
     status: 403,
     description: "если роль пользователя не подходит",
   })
-  @UseGuards(IsAuthenticatedGuard, IsManagerOrClient)
+  @Auth(UserRoles.ManagerOrClient)
   @Get("common/support-requests/:id/messages")
   async getHistory(
     @Param("id", ParseMongoIdPipe) id: string,
@@ -260,7 +256,7 @@ export class SupportRequestController {
     status: 403,
     description: "если роль пользователя не подходит",
   })
-  @UseGuards(IsAuthenticatedGuard, IsManagerOrClient)
+  @Auth(UserRoles.ManagerOrClient)
   @Post("common/support-requests/:id/messages")
   async sendMessage(
     @Body() data: CreateMessageDto,
@@ -316,7 +312,7 @@ export class SupportRequestController {
     status: 403,
     description: "если роль пользователя не подходит",
   })
-  @UseGuards(IsAuthenticatedGuard, IsManagerOrClient)
+  @Auth(UserRoles.ManagerOrClient)
   @Post("common/support-requests/:id/messages/read")
   async readMessages(
     @Body() data: IsCreatedMessageRequestDto,
