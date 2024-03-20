@@ -5,20 +5,18 @@ import {
   Post,
   Req,
   Res,
-  UseGuards,
 } from "@nestjs/common";
 import { AuthService } from "./auth.service";
-import { LocalAuthGuard } from "src/guards/auth.guard";
 import { Request, Response } from "express";
 import { UserService } from "src/user/user.service";
 import { UserRoles } from "src/types/user-roles";
 import { SignUpDto } from "./dto/user-sign-up.dto";
-import { IsNotAuthenticatedGuard } from "src/guards/is-not-authenticated.guard";
 import { ApiTags, ApiOperation, ApiBody, ApiResponse } from "@nestjs/swagger";
 import { UserSignInResponseDto } from "./dto/user-sign-in-response.dto";
 import { UserSignUpResponseDto } from "./dto/user-sign-up-response.dto";
 import { User } from "src/user/entities/user.entity";
 import { Auth } from "src/decorators/auth.decorator";
+import { Login } from "src/decorators/login.decorator";
 
 @ApiTags("API Модуля «Аутентификация и авторизация»")
 @Controller()
@@ -50,7 +48,7 @@ export class AuthController {
     description:
       "Если пользователя с указанным email не существует или пароль неверный",
   })
-  @UseGuards(IsNotAuthenticatedGuard, LocalAuthGuard)
+  @Login()
   @Post("auth/login")
   async login(@Req() req: Request): Promise<UserSignInResponseDto> {
     try {
