@@ -12,9 +12,9 @@ import { ValidationPipe } from "@nestjs/common";
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+  app.use(helmet());
   app.setGlobalPrefix("api");
   app.use(cookieParser());
-  app.use(helmet());
   app.use(
     session({
       secret: process.env.SESSION_SECRET || "super_secret",

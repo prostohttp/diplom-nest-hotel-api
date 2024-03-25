@@ -5,7 +5,7 @@ import { HotelModule } from "./hotel/hotel.module";
 import { ReservationModule } from "./reservation/reservation.module";
 import { SupportRequestModule } from "./support/request.module";
 import { AuthModule } from "./auth/auth.module";
-import { ConfigModule } from "@nestjs/config";
+import { ConfigModule, ConfigService } from "@nestjs/config";
 import mongoose from "mongoose";
 
 mongoose.set("toJSON", {
@@ -19,8 +19,16 @@ mongoose.set("toJSON", {
     ReservationModule,
     SupportRequestModule,
     AuthModule,
-    ConfigModule.forRoot(),
-    MongooseModule.forRoot(process.env.MONGO_URL_LOCAL),
+    ConfigModule.forRoot({
+      isGlobal: true,
+    }),
+    MongooseModule.forRootAsync({
+      imports: [ConfigModule],
+      useFactory: async (configService: ConfigService) => ({
+        uri: configService.get<string>("MONGO_URL_LOCAL"),
+      }),
+      inject: [ConfigService],
+    }),
   ],
   controllers: [],
   providers: [],
