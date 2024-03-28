@@ -25,7 +25,7 @@ mongoose.set("toJSON", {
     MongooseModule.forRootAsync({
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => ({
-        uri: configService.get<string>("MONGO_URL_LOCAL"),
+        uri: configService.get<string>("MONGO_URL_DOCKER"),
       }),
       inject: [ConfigService],
     }),
