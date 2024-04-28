@@ -61,14 +61,14 @@ type ID = string | ObjectId;
 interface SearchUserParams {
   limit: number;
   offset: number;
-  email: string;
-  name: string;
-  contactPhone: string;
+  email: "string";
+  name: "string";
+  contactPhone: "string";
 }
 interface IUserService {
   create(data: Partial<User>): Promise<User>;
   findById(id: ID): Promise<User>;
-  findByEmail(email: string): Promise<User>;
+  findByEmail(email: "string"): Promise<User>;
   findAll(params: SearchUserParams): Promise<User[]>;
 }
 ```
@@ -121,12 +121,12 @@ interface IUserService {
 interface SearchHotelParams {
   limit: number;
   offset: number;
-  title: string;
+  title: "string";
 }
 
 interface UpdateHotelParams {
-  title: string;
-  description: string;
+  title: "string";
+  description: "string";
 }
 
 interface IHotelService {
@@ -140,7 +140,7 @@ interface SearchRoomsParams {
   limit: number;
   offset: number;
   hotel: ID;
-  isEnabled?: boolean;
+  isEnabled?: "boolean";
 }
 
 interface HotelRoomService {
@@ -245,13 +245,13 @@ interface IReservation {
 ```ts
 interface CreateSupportRequestDto {
   user: ID;
-  text: string;
+  text: "string";
 }
 
 interface SendMessageDto {
   author: ID;
   supportRequest: ID;
-  text: string;
+  text: "string";
 }
 interface MarkMessagesAsReadDto {
   user: ID;
@@ -328,12 +328,12 @@ GET /api/common/hotel-rooms
 ```json
 [
   {
-    "id": string,
-    "description": string,
-    "images": [string],
+    "id": "string",
+    "description": "string",
+    "images": ["string"],
     "hotel": {
-      "id": string,
-      "title": string
+      "id": "string",
+      "title": "string"
     }
   }
 ]
@@ -363,13 +363,13 @@ GET /api/common/hotel-rooms/:id
 
 ```json
 {
-  "id": string,
-  "description": string,
-  "images": [string],
+  "id": "string",
+  "description": "string",
+  "images": ["string"],
   "hotel": {
-    "id": string,
-    "title": string,
-    "description": string
+    "id": "string",
+    "title": "string",
+    "description": "string"
   }
 }
 ```
@@ -394,8 +394,8 @@ POST /api/admin/hotels/
 
 ```json
 {
-  "title": string,
-  "description": string
+  "title": "string",
+  "description": "string"
 }
 ```
 
@@ -403,9 +403,9 @@ POST /api/admin/hotels/
 
 ```json
 {
-  "id": string,
-  "title": string,
-  "description": string
+  "id": "string",
+  "title": "string",
+  "description": "string"
 }
 ```
 
@@ -440,9 +440,9 @@ GET /api/admin/hotels/
 
 ```json
 {
-  "id": string,
-  "title": string,
-  "description": string
+  "id": "string",
+  "title": "string",
+  "description": "string"
 }
 ```
 
@@ -471,8 +471,8 @@ PUT /api/admin/hotels/:id
 
 ```json
 {
-  "title": string,
-  "description": string
+  "title": "string",
+  "description": "string"
 }
 ```
 
@@ -480,9 +480,9 @@ PUT /api/admin/hotels/:id
 
 ```json
 {
-  "id": string,
-  "title": string,
-  "description": string
+  "id": "string",
+  "title": "string",
+  "description": "string"
 }
 ```
 
@@ -512,8 +512,8 @@ POST /api/admin/hotel-rooms/
 Этот запрос предполагает загрузку файлов и должен использовать формат `multipart/form-data`.
 
 ```form-data
-description: string
-hotelId: string
+description: "string"
+hotelId: "string"
 images[]: File
 ```
 
@@ -521,14 +521,14 @@ images[]: File
 
 ```json
 {
-  "id": string,
-  "description": string,
-  "images": [string],
-  "isEnabled": boolean,
+  "id": "string",
+  "description": "string",
+  "images": ["string"],
+  "isEnabled": "boolean",
   "hotel": {
-    "id": string,
-    "title": string,
-    "description": string
+    "id": "string",
+    "title": "string",
+    "description": "string"
   }
 }
 ```
@@ -559,9 +559,9 @@ PUT /api/admin/hotel-rooms/:id
 Этот запрос предполагает загрузку файлов и дожен использовать формат `multipart/form-data`.
 
 ```form-data
-description: string
-hotelId: string
-isEnabled: boolean
+description: "string"
+hotelId: "string"
+isEnabled: "boolean"
 images[]: File | string
 ```
 
@@ -573,14 +573,14 @@ images[]: File | string
 
 ```json
 {
-  "id": string,
-  "description": string,
-  "images": [string],
-  "isEnabled": boolean,
+  "id": "string",
+  "description": "string",
+  "images": ["string"],
+  "isEnabled": "boolean",
   "hotel": {
-    "id": string,
-    "title": string,
-    "description": string
+    "id": "string",
+    "title": "string",
+    "description": "string"
   }
 }
 ```
@@ -614,9 +614,9 @@ POST /api/client/reservations
 
 ```json
 {
-  "hotelRoom": string,
-  "startDate": string,
-  "endDate": string
+  "hotelRoom": "string",
+  "startDate": "string",
+  "endDate": "string"
 }
 ```
 
@@ -624,15 +624,15 @@ POST /api/client/reservations
 
 ```json
 {
-  "startDate": string,
-  "endDate": string,
+  "startDate": "string",
+  "endDate": "string",
   "hotelRoom": {
-    "description": string,
-    "images": [string]
+    "description": "string",
+    "images": ["string"]
   },
   "hotel": {
-    "title": string,
-    "description": string
+    "title": "string",
+    "description": "string"
   }
 }
 ```
@@ -664,15 +664,15 @@ GET /api/client/reservations
 ```json
 [
   {
-    "startDate": string,
-    "endDate": string,
+    "startDate": "string",
+    "endDate": "string",
     "hotelRoom": {
-      "description": string,
-      "images": [string]
+      "description": "string",
+      "images": ["string"]
     },
     "hotel": {
-      "title": string,
-      "description": string
+      "title": "string",
+      "description": "string"
     }
   }
 ]
@@ -731,15 +731,15 @@ GET /api/manager/reservations/:userId
 ```json
 [
   {
-    "startDate": string,
-    "endDate": string,
+    "startDate": "string",
+    "endDate": "string",
     "hotelRoom": {
-      "description": string,
-      "images": [string]
+      "description": "string",
+      "images": ["string"]
     },
     "hotel": {
-      "title": string,
-      "description": string
+      "title": "string",
+      "description": "string"
     }
   }
 ]
@@ -809,8 +809,8 @@ POST /api/auth/login
 
 ```json
 {
-  "email": string,
-  "password": string
+  "email": "string",
+  "password": "string"
 }
 ```
 
@@ -818,9 +818,9 @@ POST /api/auth/login
 
 ```json
 {
-  "email": string,
-  "name": string,
-  "contactPhone": string
+  "email": "string",
+  "name": "string",
+  "contactPhone": "string"
 }
 ```
 
@@ -868,10 +868,10 @@ POST /api/client/register
 
 ```json
 {
-  "email": string,
-  "password": string,
-  "name": string,
-  "contactPhone": string
+  "email": "string",
+  "password": "string",
+  "name": "string",
+  "contactPhone": "string"
 }
 ```
 
@@ -879,9 +879,9 @@ POST /api/client/register
 
 ```json
 {
-  "id": string,
-  "email": string,
-  "name": string
+  "id": "string",
+  "email": "string",
+  "name": "string"
 }
 ```
 
@@ -911,11 +911,11 @@ POST /api/admin/users/
 
 ```json
 {
-  "email": string,
-  "password": string,
-  "name": string,
-  "contactPhone": string,
-  "role": string
+  "email": "string",
+  "password": "string",
+  "name": "string",
+  "contactPhone": "string",
+  "role": "string"
 }
 ```
 
@@ -923,11 +923,11 @@ POST /api/admin/users/
 
 ```json
 {
-  "id": string,
-  "email": string,
-  "name": string,
-  "contactPhone": string,
-  "role": string
+  "id": "string",
+  "email": "string",
+  "name": "string",
+  "contactPhone": "string",
+  "role": "string"
 }
 ```
 
@@ -966,10 +966,10 @@ GET /api/manager/users/
 ```json
 [
   {
-    "id": string,
-    "email": string,
-    "name": string,
-    "contactPhone": string
+    "id": "string",
+    "email": "string",
+    "name": "string",
+    "contactPhone": "string"
   }
 ]
 ```
@@ -1011,7 +1011,7 @@ POST /api/client/support-requests/
 
 ```json
 {
-  "text": string
+  "text": "string"
 }
 ```
 
@@ -1020,10 +1020,10 @@ POST /api/client/support-requests/
 ```json
 [
   {
-    "id": string,
-    "createdAt": string,
-    "isActive": boolean,
-    "hasNewMessages": boolean
+    "id": "string",
+    "createdAt": "string",
+    "isActive": "boolean",
+    "hasNewMessages": "boolean"
   }
 ]
 ```
@@ -1060,10 +1060,10 @@ GET /api/client/support-requests/
 ```json
 [
   {
-    "id": string,
-    "createdAt": string,
-    "isActive": boolean,
-    "hasNewMessages": boolean
+    "id": "string",
+    "createdAt": "string",
+    "isActive": "boolean",
+    "hasNewMessages": "boolean"
   }
 ]
 ```
@@ -1100,15 +1100,15 @@ GET /api/manager/support-requests/
 ```json
 [
   {
-    "id": string,
-    "createdAt": string,
-    "isActive": boolean,
-    "hasNewMessages": boolean,
+    "id": "string",
+    "createdAt": "string",
+    "isActive": "boolean",
+    "hasNewMessages": "boolean",
     "client": {
-      "id": string,
-      "name": string,
-      "email": string,
-      "contactPhone": string
+      "id": "string",
+      "name": "string",
+      "email": "string",
+      "contactPhone": "string"
     }
   }
 ]
@@ -1140,13 +1140,13 @@ GET /api/common/support-requests/:id/messages
 ```json
 [
   {
-    "id": string,
-    "createdAt": string,
-    "text": string,
-    "readAt": string,
+    "id": "string",
+    "createdAt": "string",
+    "text": "string",
+    "readAt": "string",
     "author": {
-      "id": string,
-      "name": string
+      "id": "string",
+      "name": "string"
     }
   }
 ]
@@ -1177,7 +1177,7 @@ POST /api/common/support-requests/:id/messages
 
 ```json
 {
-  "text": string
+  "text": "string"
 }
 ```
 
@@ -1186,13 +1186,13 @@ POST /api/common/support-requests/:id/messages
 ```json
 [
   {
-    "id": string,
-    "createdAt": string,
-    "text": string,
-    "readAt": string,
+    "id": "string",
+    "createdAt": "string",
+    "text": "string",
+    "readAt": "string",
     "author": {
-      "id": string,
-      "name": string
+      "id": "string",
+      "name": "string"
     }
   }
 ]
@@ -1223,7 +1223,7 @@ POST /api/common/support-requests/:id/messages/read
 
 ```json
 {
-  "createdBefore": string
+  "createdBefore": "string"
 }
 ```
 
@@ -1259,13 +1259,13 @@ payload: chatId
 
 ```json
 {
-  "id": string,
-  "createdAt": string,
-  "text": string,
-  "readAt": string,
+  "id": "string",
+  "createdAt": "string",
+  "text": "string",
+  "readAt": "string",
   "author": {
-    "id": string,
-    "name": string
+    "id": "string",
+    "name": "string"
   }
 }
 ```
