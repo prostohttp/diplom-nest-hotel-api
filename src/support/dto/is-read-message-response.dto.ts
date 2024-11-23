@@ -1,3 +1,3 @@
 export class IsReadMessageResponseDto {
-  success: boolean;
+    success: boolean;
 }

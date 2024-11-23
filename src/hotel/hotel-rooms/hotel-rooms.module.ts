@@ -8,13 +8,13 @@ import { HotelService } from "../hotel.service";
 import { IsValidMongoIdConstraint } from "src/validators/is-valid-mongo-id.validator";
 
 @Module({
-  imports: [
-    MongooseModule.forFeature([{ name: Hotel.name, schema: HotelSchema }]),
-    MongooseModule.forFeature([
-      { name: HotelRoom.name, schema: HotelRoomSchema },
-    ]),
-  ],
-  controllers: [HotelRoomsController],
-  providers: [HotelRoomsService, HotelService, IsValidMongoIdConstraint],
+    imports: [
+        MongooseModule.forFeature([{ name: Hotel.name, schema: HotelSchema }]),
+        MongooseModule.forFeature([
+            { name: HotelRoom.name, schema: HotelRoomSchema },
+        ]),
+    ],
+    controllers: [HotelRoomsController],
+    providers: [HotelRoomsService, HotelService, IsValidMongoIdConstraint],
 })
 export class HotelRoomsModule {}

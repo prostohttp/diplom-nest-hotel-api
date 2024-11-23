@@ -9,28 +9,29 @@ import { ConfigModule, ConfigService } from "@nestjs/config";
 import mongoose from "mongoose";
 
 mongoose.set("toJSON", {
-  versionKey: false,
+    versionKey: false,
 });
 
 @Module({
-  imports: [
-    UserModule,
-    HotelModule,
-    ReservationModule,
-    SupportRequestModule,
-    AuthModule,
-    ConfigModule.forRoot({
-      isGlobal: true,
-    }),
-    MongooseModule.forRootAsync({
-      imports: [ConfigModule],
-      useFactory: async (configService: ConfigService) => ({
-        uri: configService.get<string>("MONGO_URL_DOCKER"),
-      }),
-      inject: [ConfigService],
-    }),
-  ],
-  controllers: [],
-  providers: [],
+    imports: [
+        UserModule,
+        HotelModule,
+        ReservationModule,
+        SupportRequestModule,
+        AuthModule,
+        ConfigModule.forRoot({
+            isGlobal: true,
+        }),
+        MongooseModule.forRootAsync({
+            imports: [ConfigModule],
+            useFactory: async (configService: ConfigService) => ({
+                uri: configService.get<string>("MONGO_URL_LOCAL"),
+                // uri: configService.get<string>("MONGO_URL_DOCKER"),
+            }),
+            inject: [ConfigService],
+        }),
+    ],
+    controllers: [],
+    providers: [],
 })
 export class AppModule {}

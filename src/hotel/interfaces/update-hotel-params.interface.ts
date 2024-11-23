@@ -1,4 +1,4 @@
 export interface UpdateHotelParams {
-  title: string;
-  description: string;
+    title: string;
+    description: string;
 }

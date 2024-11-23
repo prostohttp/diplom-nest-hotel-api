@@ -9,31 +9,32 @@ import { ReservationSearchOptions } from "./interfaces/reservation-search-option
 
 @Injectable()
 export class ReservationService implements IReservation {
-  constructor(
-    @InjectModel(Reservation.name) private ReservationModel: Model<Reservation>,
-  ) {}
+    constructor(
+        @InjectModel(Reservation.name)
+        private ReservationModel: Model<Reservation>,
+    ) {}
 
-  async addReservation(data: ReservationDto): Promise<Reservation> {
-    const { userId, hotelId, roomId, dateStart, dateEnd } = data;
-    return this.ReservationModel.create({
-      userId,
-      hotelId,
-      roomId,
-      dateStart,
-      dateEnd,
-    });
-  }
+    async addReservation(data: ReservationDto): Promise<Reservation> {
+        const { userId, hotelId, roomId, dateStart, dateEnd } = data;
+        return this.ReservationModel.create({
+            userId,
+            hotelId,
+            roomId,
+            dateStart,
+            dateEnd,
+        });
+    }
 
-  async removeReservation(id: ID): Promise<void> {
-    await this.ReservationModel.deleteOne({ _id: id });
-  }
+    async removeReservation(id: ID): Promise<void> {
+        await this.ReservationModel.deleteOne({ _id: id });
+    }
 
-  getReservations(filter: ReservationSearchOptions): Promise<Reservation[]> {
-    const { userId, dateStart, dateEnd } = filter;
-    return this.ReservationModel.find({
-      userId,
-      dateStart: { $gte: dateStart },
-      dateEnd: { $lte: dateEnd },
-    });
-  }
+    getReservations(filter: ReservationSearchOptions): Promise<Reservation[]> {
+        const { userId, dateStart, dateEnd } = filter;
+        return this.ReservationModel.find({
+            userId,
+            dateStart: { $gte: dateStart },
+            dateEnd: { $lte: dateEnd },
+        });
+    }
 }

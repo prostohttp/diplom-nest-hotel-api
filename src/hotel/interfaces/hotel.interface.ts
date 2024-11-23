@@ -1,4 +1,4 @@
 export interface IHotel {
-  title: string;
-  description: string;
+    title: string;
+    description: string;
 }

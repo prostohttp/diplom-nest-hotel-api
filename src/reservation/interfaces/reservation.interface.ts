@@ -4,9 +4,9 @@ import { ReservationSearchOptions } from "./reservation-search-options.interface
 import { Reservation } from "../entities/reservation.entity";
 
 export interface IReservation {
-  addReservation(data: ReservationDto): Promise<Reservation>;
-  removeReservation(id: ID): Promise<void>;
-  getReservations(
-    filter: ReservationSearchOptions,
-  ): Promise<Array<Reservation>>;
+    addReservation(data: ReservationDto): Promise<Reservation>;
+    removeReservation(id: ID): Promise<void>;
+    getReservations(
+        filter: ReservationSearchOptions,
+    ): Promise<Array<Reservation>>;
 }

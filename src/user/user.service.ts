@@ -11,39 +11,45 @@ import { ID } from "src/types/id";
 
 @Injectable()
 export class UserService implements IUserService {
-  constructor(@InjectModel(User.name) private userModel: Model<User>) {}
+    constructor(@InjectModel(User.name) private userModel: Model<User>) {}
 
-  async create(data: CreateUserDto): Promise<UserDocument> {
-    const hash = await bcrypt.hash(data.password, 10);
-    const user = new this.userModel({ ...data, passwordHash: hash });
-    if (user) {
-      return user.save();
-    } else {
-      throw new ConflictException(
-        "Пользователь с таким email уже зарегистрирован",
-      );
+    async create(data: CreateUserDto): Promise<UserDocument> {
+        const hash = await bcrypt.hash(data.password, 10);
+        const user = new this.userModel({ ...data, passwordHash: hash });
+        if (user) {
+            return user.save();
+        } else {
+            throw new ConflictException(
+                "Пользователь с таким email уже зарегистрирован",
+            );
+        }
     }
-  }
 
-  async findById(id: ID): Promise<UserDocument> {
-    return this.userModel.findOne({ _id: id });
-  }
+    async findById(id: ID): Promise<UserDocument> {
+        return this.userModel.findOne({ _id: id });
+    }
 
-  async findByEmail(email: string): Promise<UserDocument> {
-    return this.userModel.findOne({ email });
-  }
+    async findByEmail(email: string): Promise<UserDocument> {
+        return this.userModel.findOne({ email });
+    }
 
-  async findAll(params: SearchUserParams): Promise<UserDocument[]> {
-    const { limit, offset, email = "", name = "", contactPhone = "" } = params;
-    return this.userModel
-      .find({
-        $and: [
-          { email: { $regex: email, $options: "i" } },
-          { name: { $regex: name, $options: "i" } },
-          { contactPhone: { $regex: contactPhone, $options: "i" } },
-        ],
-      })
-      .skip(offset)
-      .limit(limit);
-  }
+    async findAll(params: SearchUserParams): Promise<UserDocument[]> {
+        const {
+            limit,
+            offset,
+            email = "",
+            name = "",
+            contactPhone = "",
+        } = params;
+        return this.userModel
+            .find({
+                $and: [
+                    { email: { $regex: email, $options: "i" } },
+                    { name: { $regex: name, $options: "i" } },
+                    { contactPhone: { $regex: contactPhone, $options: "i" } },
+                ],
+            })
+            .skip(offset)
+            .limit(limit);
+    }
 }

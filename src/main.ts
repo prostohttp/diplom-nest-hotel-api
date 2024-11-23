@@ -11,25 +11,24 @@ import { swaggerConfig } from "./config/swagger.config";
 import { ValidationPipe } from "@nestjs/common";
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
-  app.use(helmet());
-  app.setGlobalPrefix("api");
-  app.use(cookieParser());
-  app.use(
-    session({
-      secret: process.env.SESSION_SECRET || "super_secret",
-      resave: false,
-      saveUninitialized: false,
-    }),
-  );
-  app.use(passport.session());
-  app.use(passport.initialize());
-  app.useGlobalPipes(new ValidationPipe());
-  useContainer(app.select(AppModule), { fallbackOnErrors: true });
-  const document = SwaggerModule.createDocument(app, swaggerConfig());
-  SwaggerModule.setup("api", app, document);
-
-  await app.listen(process.env.HTTP_PORT || 3000);
+    const app = await NestFactory.create(AppModule);
+    app.use(helmet());
+    app.setGlobalPrefix("api");
+    app.use(cookieParser());
+    app.use(
+        session({
+            secret: process.env.SESSION_SECRET || "super_secret",
+            resave: false,
+            saveUninitialized: false,
+        }),
+    );
+    app.use(passport.session());
+    app.use(passport.initialize());
+    app.useGlobalPipes(new ValidationPipe());
+    useContainer(app.select(AppModule), { fallbackOnErrors: true });
+    const document = SwaggerModule.createDocument(app, swaggerConfig());
+    SwaggerModule.setup("api", app, document);
+    await app.listen(process.env.HTTP_PORT || 3000);
 }
 
 bootstrap();

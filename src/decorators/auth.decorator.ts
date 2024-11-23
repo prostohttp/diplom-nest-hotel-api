@@ -5,9 +5,9 @@ import { RolesGuard } from "src/guards/roles.guard";
 import { UserRoles } from "src/types/user-roles";
 
 export function Auth(...roles: UserRoles[]) {
-  return applyDecorators(
-    SetMetadata("roles", roles),
-    UseGuards(IsAuthenticatedGuard, RolesGuard),
-    ApiUnauthorizedResponse({ description: "Вы не авторизованы" }),
-  );
+    return applyDecorators(
+        SetMetadata("roles", roles),
+        UseGuards(IsAuthenticatedGuard, RolesGuard),
+        ApiUnauthorizedResponse({ description: "Вы не авторизованы" }),
+    );
 }

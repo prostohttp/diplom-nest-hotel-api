@@ -7,11 +7,11 @@ import { Hotel, HotelSchema } from "./entities/hotel.entity";
 import { IsUniqueTitleConstraint } from "./validators/is-unique-hotel.validator";
 
 @Module({
-  imports: [
-    HotelRoomsModule,
-    MongooseModule.forFeature([{ name: Hotel.name, schema: HotelSchema }]),
-  ],
-  controllers: [HotelController],
-  providers: [HotelService, IsUniqueTitleConstraint],
+    imports: [
+        HotelRoomsModule,
+        MongooseModule.forFeature([{ name: Hotel.name, schema: HotelSchema }]),
+    ],
+    controllers: [HotelController],
+    providers: [HotelService, IsUniqueTitleConstraint],
 })
 export class HotelModule {}

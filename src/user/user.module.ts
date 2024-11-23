@@ -7,11 +7,11 @@ import { User, UserSchema } from "./entities/user.entity";
 import { IsUniqueEmailConstraint } from "../validators/is-unique-email.validator";
 
 @Module({
-  imports: [
-    MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
-  ],
-  controllers: [UserController],
-  providers: [UserService, IsUniqueEmailConstraint],
-  exports: [UserService],
+    imports: [
+        MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
+    ],
+    controllers: [UserController],
+    providers: [UserService, IsUniqueEmailConstraint],
+    exports: [UserService],
 })
 export class UserModule {}

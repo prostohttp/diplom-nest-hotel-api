@@ -5,17 +5,17 @@ export type MessageDocument = HydratedDocument<Message>;
 
 @Schema()
 export class Message {
-  @Prop({ type: MongooseSchema.Types.ObjectId, required: true, ref: "User" })
-  author: MongooseSchema.Types.ObjectId;
+    @Prop({ type: MongooseSchema.Types.ObjectId, required: true, ref: "User" })
+    author: MongooseSchema.Types.ObjectId;
 
-  @Prop({ required: true })
-  sentAt: Date;
+    @Prop({ required: true })
+    sentAt: Date;
 
-  @Prop({ required: true })
-  text: string;
+    @Prop({ required: true })
+    text: string;
 
-  @Prop({ required: false })
-  readAt: Date;
+    @Prop({ required: false })
+    readAt: Date;
 }
 
 export const MessageSchema = SchemaFactory.createForClass(Message);
